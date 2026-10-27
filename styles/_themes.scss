@@ -1,0 +1,16 @@
+@use "vars";
+
+$themes: (
+    light: (
+        background: vars.$color-light-background,
+        foreground: vars.$color-light-foreground,
+    ),
+    dark: (
+        background: vars.$color-dark-background,
+        foreground: vars.$color-dark-foreground,
+    ),
+    mocha: (
+        background: vars.$color-base,
+        foreground: vars.$color-text,
+    ),
+);
