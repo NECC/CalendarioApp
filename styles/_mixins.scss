@@ -1,0 +1,16 @@
+@use "sass:map";
+@use "themes" as *;
+
+@mixin render-tokens($tokens) {
+    @each $token, $value in $tokens {
+        --#{$token}: #{$value};
+    }
+}
+
+@mixin apply-theme($theme-name) {
+    @if map-has-key($map: $themes, $key: $name) {
+        @include render-tokens(map-get($themes, $theme-name));
+    } @else {
+        @error "Theme '#{$theme-name}' not found in \$themes map.";
+    }
+}
