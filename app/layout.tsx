@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.scss";
+import "./globals.css";
+import { LocaleProvider } from "@/lib/i18n-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,13 +18,17 @@ export const metadata: Metadata = {
   description: "Calendar app for exams and events.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
-      <body>{children}</body>
+      <body className="min-h-screen">
+        <LocaleProvider initialLocale="en">
+          {children}
+        </LocaleProvider>
+      </body>
     </html>
   );
 }
