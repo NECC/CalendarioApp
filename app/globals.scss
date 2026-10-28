@@ -1,5 +1,5 @@
-@use "themes" as *;
-@use "mixins" as *;
+@use "styles/themes" as *;
+@use "styles/mixins" as *;
 
 :root {
     @include apply-theme("light");

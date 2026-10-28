@@ -10,7 +10,7 @@
 
 // Mixin to apply a theme by name
 @mixin apply-theme($theme-name) {
-    @if map-has-key($map: $themes, $key: $name) {
+    @if map-has-key($map: $themes, $key: $theme-name) {
         @include render-tokens(map-get($themes, $theme-name));
     } @else {
         @error "Theme '#{$theme-name}' not found in \$themes map.";
