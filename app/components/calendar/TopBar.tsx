@@ -1,4 +1,9 @@
+"use client";
+
 import { useTranslation } from "@/lib/i18n-context";
+import { Button } from "@/app/components/ui/Button";
+import { Input } from "@/app/components/ui/Input";
+import { ThemeSwitcher } from "@/app/components/ui/ThemeSwitcher";
 
 interface TopBarProps {
   title: string;
@@ -8,48 +13,41 @@ interface TopBarProps {
 }
 
 export function TopBar({ title, onPrev, onNext, onToday }: TopBarProps) {
-  const { t, locale, setLocale } = useTranslation();
+  const { t } = useTranslation();
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-center gap-4">
         <div className="inline-flex border border-border rounded-lg overflow-hidden">
-          <button type="button" className="bg-accent font-semibold px-3.5 py-2 text-sm">
+          <Button variant="primary" size="sm" className="rounded-none border-none">
             {t("Calendar.monthly")}
-          </button>
-          <button type="button" className="px-3.5 py-2 text-sm">
+          </Button>
+          <Button variant="ghost" size="sm" className="rounded-none border-none">
             {t("Calendar.agenda")}
-          </button>
+          </Button>
         </div >
         <div className="inline-flex border border-border rounded-lg overflow-hidden">
-          <button type="button" onClick={onPrev} className="px-3.5 py-2 text-sm">
+          <Button variant="ghost" size="sm" className="rounded-none border-none" onClick={onPrev}>
             &lt;
-          </button>
-          <button type="button" onClick={onToday} className="px-3.5 py-2 text-sm">
+          </Button>
+          <Button variant="ghost" size="sm" className="rounded-none border-none" onClick={onToday}>
             {t("Calendar.today")}
-          </button>
-          <button type="button" onClick={onNext} className="px-3.5 py-2 text-sm">
+          </Button>
+          <Button variant="ghost" size="sm" className="rounded-none border-none" onClick={onNext}>
             &gt;
-          </button>
+          </Button>
         </div >
         <h2 className="text-xl m-0 font-bold">
           {title}
         </h2>
       </div >
       <div className="flex items-center gap-4">
-        <input
+        <Input
           type="search"
           placeholder={t("Calendar.filter")}
-          className="px-3 py-2 rounded-md border border-[rgba(128,128,128,0.25)] bg-transparent text-inherit text-sm"
+          className="w-48"
         />
-        <select 
-          value={locale} 
-          onChange={(e) => setLocale(e.target.value as any)}
-          className="bg-transparent border border-border rounded p-1 text-sm"
-        >
-          <option value="en">EN</option>
-          <option value="pt">PT</option>
-        </select>
+        <ThemeSwitcher />
       </div >
     </div >
   );

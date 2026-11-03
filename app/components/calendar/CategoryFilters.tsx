@@ -1,6 +1,9 @@
+"use client";
+
 import type { Category, CategoryId } from "@/types/calendar";
-import clsx from "clsx";
+import { Button } from "@/app/components/ui/Button";
 import { useTranslation } from "@/lib/i18n-context";
+import { clsx } from "clsx";
 
 interface CategoryFiltersProps {
   categories: Category[];
@@ -17,26 +20,21 @@ export function CategoryFilters({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        className={clsx(
-          "inline-flex items-center justify-center gap-1 px-3 py-[0.35rem] rounded-md border border-border text-[0.8rem] bg-transparent cursor-pointer",
-          selectedCategory === "all" && "bg-accent text-background"
-        )}
+      <Button
+        variant={selectedCategory === "all" ? "primary" : "outline"}
+        size="sm"
         onClick={() => onCategoryChange("all")}
       >
         {t("Calendar.all_categories", { count: categories.length })}
-      </button>
+      </Button>
 
       {categories.map((category) => (
-        <button
+        <Button
           key={category.id}
-          type="button"
-          className={clsx(
-            "inline-flex items-center justify-center gap-1 px-3 py-[0.35rem] rounded-md border border-border text-[0.8rem] bg-transparent cursor-pointer",
-            selectedCategory === category.id && "bg-accent text-background"
-          )}
+          variant={selectedCategory === category.id ? "primary" : "outline"}
+          size="sm"
           onClick={() => onCategoryChange(category.id)}
+          className="gap-1"
         >
           <span
             style={{
@@ -45,9 +43,10 @@ export function CategoryFilters({
               borderRadius: 2,
               background: category.color,
             }}
+            className="shrink-0"
           />
           {t(category.name)}
-        </button>
+        </Button>
       ))}
     </div >
   );

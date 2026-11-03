@@ -6,11 +6,17 @@ import { CategoryFilters } from "./CategoryFilters";
 import { MonthGrid } from "./MonthGrid";
 import type { calendarEvent, Category, CategoryId } from "@/types/calendar";
 import { useTranslation } from "@/lib/i18n-context";
+import { useEffect } from "react";
 
 const CATEGORIES: Category[] = [
   { id: "event", name: "Calendar.categories.event", color: "#1E90FF" },
   { id: "exam", name: "Calendar.categories.exam", color: "#FF4500" },
 ];
+
+const MONTH_KEYS = [
+  'january', 'february', 'march', 'april', 'may', 'june',
+  'july', 'august', 'september', 'october', 'november', 'december'
+] as const;
 
 export function EventCalendar({ initialEvents = []}: {initialEvents ?: calendarEvent[]}) {
   const { t } = useTranslation();
@@ -19,7 +25,7 @@ export function EventCalendar({ initialEvents = []}: {initialEvents ?: calendarE
 
   const monthIndex = currentDate.getMonth();
   const year = currentDate.getFullYear();
-  const title = `${t(`Calendar.months.${['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'][monthIndex]}`)} ${year}`;
+  const title = `${t(`Calendar.months.${MONTH_KEYS[monthIndex]}`)} ${year}`;
 
   const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
   const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
