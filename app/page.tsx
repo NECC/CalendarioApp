@@ -1,4 +1,5 @@
-import { EventCalendar } from "./components/calendar/EventCalendar";
+import { EventCalendar, CalendarSkeleton } from "./components/calendar/EventCalendar";
+import { Suspense } from "react";
 
 const PLACEHOLDER_EVENTS = [
   {
@@ -21,7 +22,9 @@ const PLACEHOLDER_EVENTS = [
 export default function Home() {
   return (
     <main style={{display: "flex", width: "100%", minHeight: "100vh"}}>
-      <EventCalendar initialEvents={[...PLACEHOLDER_EVENTS]}/>
+      <Suspense fallback={<CalendarSkeleton />}>
+        <EventCalendar initialEvents={[...PLACEHOLDER_EVENTS]}/>
+      </Suspense>
     </main>
   );
 
