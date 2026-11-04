@@ -1,31 +1,26 @@
 "use client";
 
 import type { calendarEvent } from "@/types/calendar";
-import { formatEventRange } from "@/lib/calendar-utils";
-import { Badge } from "@/app/components/ui/Badge";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  all: "var(--color-all)",
-  event: "var(--color-event)",
-  exam: "var(--color-exam)",
+  ano1: "#3B82F6", // Azul
+  ano2: "#10B981", // Verde
+  ano3: "#8B5CF6", // Roxo
+  eventos: "#111827", // Preto
 };
 
 export function EventChip({ event }: { event: calendarEvent }) {
-  const dotColor = CATEGORY_COLORS[event.category] ?? "var(--accent)";
+  // Assume a cor azul como padrão se a categoria não for encontrada
+  const bgColor = CATEGORY_COLORS[event.category] ?? "#3B82F6";
 
   return (
     <div
-      className="group flex items-center justify-start gap-1 px-1 py-0.5 rounded bg-[rgba(128,128,128,0.08)] text-[0.75rem] cursor-pointer truncate hover:bg-[rgba(128,128,128,0.15)] transition-colors"
+      className="w-full px-2 py-1 mb-1 rounded text-white text-[0.75rem] font-medium text-center truncate cursor-pointer transition-opacity hover:opacity-80"
+      style={{ backgroundColor: bgColor }}
       title={event.title}
       aria-description={event.description}
     >
-      <span
-        style={{ width: 7, height: 7, borderRadius: 2, background: dotColor, flexShrink: 0 }}
-      />
-      <strong className="truncate group-hover:text-accent transition-colors">
-        {formatEventRange(event.startTimestampnz, event.endTimestampnz)}
-      </strong>
-      <span className="truncate group-hover:text-accent transition-colors">{event.title}</span>
-    </div >
+      {event.title}
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { LocaleProvider } from "@/lib/i18n-context";
 import { ThemeProvider } from "@/app/components/ui/ThemeContext";
@@ -20,19 +21,32 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
     >
+      <head>
+        <Script id="theme-script" strategy="beforeInteractive">
+          {`
+            try {
+              const theme = localStorage.getItem('theme') || 'light';
+              document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+          `}
+        </Script>
+      </head>
       <body className="min-h-screen">
         <ThemeProvider>
-          <LocaleProvider initialLocale="en">
-            {children}
-          </LocaleProvider>
+          <LocaleProvider initialLocale="en">{children}</LocaleProvider>
         </ThemeProvider>
       </body>
-    </html >
+    </html>
   );
 }

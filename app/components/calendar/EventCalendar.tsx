@@ -1,75 +1,82 @@
-"use client"
+"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TopBar } from "./TopBar";
-import { CategoryFilters } from "./CategoryFilters";
 import { MonthGrid } from "./MonthGrid";
-import type { calendarEvent, Category, CategoryId } from "@/types/calendar";
-import { useTranslation } from "@/lib/i18n-context";
-
-const CATEGORIES: Category[] = [
-  { id: "event", name: "Calendar.categories.event", color: "#1E90FF" },
-  { id: "exam", name: "Calendar.categories.exam", color: "#FF4500" },
-];
+import { CalendarSkeleton } from "./CalendarSkeleton";
+import type { calendarEvent, Category } from "@/types/calendar";
 
 const MONTH_KEYS = [
-  'january', 'february', 'march', 'april', 'may', 'june',
-  'july', 'august', 'september', 'october', 'november', 'december'
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
 ] as const;
 
-export function EventCalendar({ initialEvents = []}: {initialEvents ?: calendarEvent[]}) {
-  const { t } = useTranslation();
-  const [currentDate, setCurrentDate] = useState(() => new Date()) ;
-  const [selectedCategory, setSelectedCategory] = useState<CategoryId>("all");
+interface EventCalendarProps {
+  initialEvents?: calendarEvent[];
+  initialCategories?: Category[];
+}
+
+export function EventCalendar({
+  initialEvents = [],
+  initialCategories = [],
+}: EventCalendarProps) {
+  const [isMounted, setIsMounted] = useState(false);
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+
+  const [categories] = useState<Category[]>(initialCategories);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  useEffect(() => {
+    setCurrentDate(new Date());
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) return <CalendarSkeleton />;
 
   const monthIndex = currentDate.getMonth();
   const year = currentDate.getFullYear();
-  const title = `${t(`Calendar.months.${MONTH_KEYS[monthIndex]}`)} ${year}`;
+  const title = `${MONTH_KEYS[monthIndex].toUpperCase()} ${year}`;
 
-  const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
-  const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
-  const toToday = () => setCurrentDate(new Date());
+  const prevMonth = () =>
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1),
+    );
+  const nextMonth = () =>
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1),
+    );
 
-  const filteredEvents = selectedCategory === "all" ? initialEvents : initialEvents.filter((e) => e.category === selectedCategory);
+  // Filtragem direta baseada na seleção do dropdown ("all" mostra tudo)
+  const filteredEvents = initialEvents.filter((e) => {
+    if (selectedCategory === "all") return true;
+    return e.category === selectedCategory;
+  });
 
   return (
-    <div className="w-full p-6 bg-background text-foreground flex flex-col gap-5">
-      <TopBar title={title} onPrev={prevMonth} onNext={nextMonth} onToday={toToday} />
-      <CategoryFilters
-        categories={CATEGORIES}
+    <div className="flex flex-col w-full min-h-screen bg-background text-foreground p-4 gap-4 max-w-lg mx-auto">
+      {/* Barra Superior com a seleção de categorias integrada */}
+      <TopBar
+        title={title}
+        onPrev={prevMonth}
+        onNext={nextMonth}
+        categories={categories}
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
       />
-      <MonthGrid date={currentDate} events={filteredEvents} />
-    </div >
-  );
-}
 
-export function CalendarSkeleton() {
-  return (
-    <div className="w-full p-6 bg-background text-foreground flex flex-col gap-5 animate-pulse">
-      <div className="flex items-center justify-between">
-        <div className="h-8 w-48 rounded-md bg-muted/40" />
-        <div className="flex gap-2">
-          <div className="h-9 w-20 rounded-md bg-muted/40" />
-          <div className="h-9 w-9 rounded-md bg-muted/40" />
-          <div className="h-9 w-9 rounded-md bg-muted/40" />
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <div className="h-8 w-16 rounded-full bg-muted/40" />
-        <div className="h-8 w-20 rounded-full bg-muted/40" />
-        <div className="h-8 w-20 rounded-full bg-muted/40" />
-      </div>
-
-      <div className="grid grid-cols-7 gap-2">
-        {Array.from({ length: 7 }).map((_, i) => (
-          <div key={`header-${i}`} className="h-6 rounded bg-muted/30" />
-        ))}
-        {Array.from({ length: 35 }).map((_, i) => (
-          <div key={`cell-${i}`} className="h-24 rounded-lg bg-muted/20" />
-        ))}
+      {/* Grelha do Calendário */}
+      <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
+        <MonthGrid date={currentDate} events={filteredEvents} />
       </div>
     </div>
   );

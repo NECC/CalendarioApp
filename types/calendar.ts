@@ -1,9 +1,7 @@
-// I probably shouldn't hardcode these.
-// TODO: Make this dynamic
-export type CategoryId = "all" | "event" | "exam";
+export type CategoryId = string; // Permitir qualquer string para os IDs
 
 export interface Category {
-  id: CategoryId;
+  id: string;
   name: string;
   color: string;
 }
@@ -11,8 +9,8 @@ export interface Category {
 export interface calendarEvent {
   id: string;
   title: string;
-  description: string;
-  startTimestampnz: string; // ISO 8601 format
-  endTimestampnz: string; // ISO 8601 format
-  category: string;
+  description?: string;
+  startTimestampnz: Date | string;
+  endTimestampnz: Date | string;
+  category: string; // Permitir string para corresponder aos novos IDs
 }

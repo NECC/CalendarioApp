@@ -1,31 +1,40 @@
-import { EventCalendar, CalendarSkeleton } from "./components/calendar/EventCalendar";
-import { Suspense } from "react";
+"use client";
 
-const PLACEHOLDER_EVENTS = [
-  {
-    id: "1",
-    title: "Event 1",
-    description: "This is the description for event 1",
-    startTimestampnz: "2026-10-01T10:00:00",
-    endTimestampnz: "2026-10-01T10:00:00",
-    category: "exam"
-  },
-  {
-    id: "2",
-    title: "Event 2",
-    description: "This is the description for event 2",
-    startTimestampnz: "2026-10-02T10:00:00",
-    endTimestampnz: "2026-10-02T10:00:00",
-    category: "event"
-  }
-]
+import { useState, useEffect } from "react";
+import { EventCalendar } from "@/app/components/calendar/EventCalendar";
+import { CalendarSkeleton } from "@/app/components/calendar/CalendarSkeleton";
+import type { calendarEvent, Category } from "@/types/calendar";
+
 export default function Home() {
+  const [events, setEvents] = useState<calendarEvent[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const res = await fetch("/api/calendar");
+        if (!res.ok) throw new Error("Erro ao carregar dados");
+        const data = await res.json();
+        setEvents(data.events || []);
+        setCategories(data.categories || []);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
+  }, []);
+
+  if (loading) {
+    return <CalendarSkeleton />;
+  }
+
   return (
-    <main style={{display: "flex", width: "100%", minHeight: "100vh"}}>
-      <Suspense fallback={<CalendarSkeleton />}>
-        <EventCalendar initialEvents={[...PLACEHOLDER_EVENTS]}/>
-      </Suspense>
+    <main style={{ display: "flex", width: "100%", minHeight: "100vh" }}>
+      <EventCalendar initialEvents={events} initialCategories={categories} />
     </main>
   );
-
 }
