@@ -8,6 +8,7 @@
 // =============================================================
 import { useCallback, useEffect, useState } from "react";
 import {
+  getVapidPublicKey,
   sendTestNotification,
   subscribeUser,
   unsubscribeUser,
@@ -49,6 +50,41 @@ function isStandalone() {
   );
 }
 
+/** Espera pelo service worker, mas desiste ao fim de `ms` (senão ficava à espera para sempre). */
+function swReady(ms = 8000): Promise<ServiceWorkerRegistration> {
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("SW_TIMEOUT")), ms),
+    ),
+  ]);
+}
+
+/** A subscrição existente foi criada com esta chave VAPID? */
+function sameKey(sub: PushSubscription, key: Uint8Array) {
+  const current = sub.options?.applicationServerKey;
+  if (!current) return true; // browser não diz → assumimos que sim
+  const a = new Uint8Array(current);
+  return a.length === key.length && a.every((v, i) => v === key[i]);
+}
+
+/** Traduz o erro técnico numa mensagem que a pessoa (e tu) percebem. */
+function explainError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  const name = err instanceof Error ? err.name : "";
+  if (msg === "NO_VAPID_KEY")
+    return "O servidor não tem a chave VAPID. Na Vercel: Settings → Environment Variables → adiciona NEXT_PUBLIC_VAPID_PUBLIC_KEY e VAPID_PRIVATE_KEY e faz Redeploy.";
+  if (msg === "SW_TIMEOUT")
+    return "O service worker não arrancou. Recarrega a página; se continuar, vê a consola (F12).";
+  if (/push service|registration failed|AbortError/i.test(msg) || name === "AbortError")
+    return "O browser recusou o registo no serviço de push. No Brave, ativa \"Usar serviços Google para mensagens push\" em brave://settings/privacy. Noutros browsers, confirma que não estás em modo anónimo.";
+  if (name === "NotAllowedError")
+    return "As notificações estão bloqueadas para este site. Desbloqueia no cadeado ao lado do endereço.";
+  if (msg.startsWith("SERVER:"))
+    return `O servidor recusou: ${msg.slice(7)}`;
+  return `Não foi possível ativar (${name || "erro"}: ${msg}).`;
+}
+
 export function usePushNotifications(prefs: PushPrefs) {
   const [status, setStatus] = useState<PushStatus>("loading");
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
@@ -68,9 +104,15 @@ export function usePushNotifications(prefs: PushPrefs) {
       } else if (Notification.permission === "denied") {
         next = "denied";
       } else {
-        const reg = await navigator.serviceWorker.ready;
-        sub = await reg.pushManager.getSubscription();
-        next = sub ? "on" : "off";
+        try {
+          const reg = await swReady();
+          sub = await reg.pushManager.getSubscription();
+          next = sub ? "on" : "off";
+        } catch (err) {
+          // Mesmo sem SW mostramos o interruptor ("off"): ao carregar, o erro aparece explicado.
+          console.error(err);
+          next = "off";
+        }
       }
 
       if (!cancelled) {
@@ -109,25 +151,32 @@ export function usePushNotifications(prefs: PushPrefs) {
         return;
       }
 
-      const key = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!key) throw new Error("NEXT_PUBLIC_VAPID_PUBLIC_KEY não está definida");
+      // Chave do build; se não existir, pedimos ao servidor (ver getVapidPublicKey).
+      const key = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || (await getVapidPublicKey());
+      if (!key) throw new Error("NO_VAPID_KEY");
+      const keyBytes = urlBase64ToUint8Array(key);
 
-      const reg = await navigator.serviceWorker.ready;
-      const sub =
-        (await reg.pushManager.getSubscription()) ??
-        (await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(key),
-        }));
+      const reg = await swReady();
+      let sub = await reg.pushManager.getSubscription();
+      // Uma subscrição antiga feita com OUTRA chave VAPID (ex.: chaves mudaram)
+      // nunca vai receber nada → apagamos e criamos uma nova.
+      if (sub && !sameKey(sub, keyBytes)) {
+        await sub.unsubscribe();
+        sub = null;
+      }
+      sub ??= await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: keyBytes,
+      });
 
       const r = await subscribeUser(sub.toJSON(), prefs);
-      if (!r.success) throw new Error(r.error);
+      if (!r.success) throw new Error(`SERVER:${r.error}`);
 
       setSubscription(sub);
       setStatus("on");
     } catch (err) {
-      console.error(err);
-      setMessage("Não foi possível ativar. Tenta outra vez.");
+      console.error("[push] erro ao ativar:", err);
+      setMessage(explainError(err));
     } finally {
       setBusy(false);
     }

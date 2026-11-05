@@ -96,3 +96,13 @@ export async function sendTestNotification(endpoint: string) {
     ? { success: true as const }
     : { success: false as const, error: "Falhou o envio" };
 }
+
+/**
+ * Chave pública VAPID lida no servidor, em tempo real.
+ * (A versão NEXT_PUBLIC_ é "colada" no código só durante o build — se a
+ * variável foi adicionada na Vercel depois do deploy, o browser não a tem.
+ * Assim funciona na mesma.)
+ */
+export async function getVapidPublicKey() {
+  return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null;
+}

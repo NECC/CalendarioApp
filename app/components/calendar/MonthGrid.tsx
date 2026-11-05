@@ -15,7 +15,6 @@ interface MonthGridProps {
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const TOTAL_CELLS = 42; // 6 semanas: altura constante entre meses
 
 // Cada dia é um círculo que cresce com a altura disponível (até 2.75rem)
 const DAY_BOX = "relative h-full max-h-11 aspect-square";
@@ -30,12 +29,18 @@ export const MonthGrid = memo(function MonthGrid({
   const year = date.getFullYear();
   const month = date.getMonth();
 
-  const cells = useMemo(() => {
+  // Só as semanas de que o mês precisa (4, 5 ou 6). As linhas repartem a
+  // altura toda do cartão, por isso o calendário fica sempre proporcional
+  // — sem linhas meio vazias no fim.
+  const { cells, weeks } = useMemo(() => {
     const firstWeekday = new Date(year, month, 1).getDay();
-    return Array.from({ length: TOTAL_CELLS }, (_, i) => {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const weeks = Math.ceil((firstWeekday + daysInMonth) / 7);
+    const cells = Array.from({ length: weeks * 7 }, (_, i) => {
       const d = new Date(year, month, 1 - firstWeekday + i);
       return { date: d, inMonth: d.getMonth() === month };
     });
+    return { cells, weeks };
   }, [year, month]);
 
   const categoriesByDay = useMemo(() => {
@@ -76,8 +81,11 @@ export const MonthGrid = memo(function MonthGrid({
         ))}
       </div>
 
-      {/* 6 linhas que repartem a altura toda do cartão */}
-      <div className="flex-1 min-h-0 grid grid-cols-7 grid-rows-6 gap-x-1">
+      {/* Uma linha por semana do mês, a repartir a altura toda do cartão */}
+      <div
+        className="flex-1 min-h-0 grid grid-cols-7 gap-x-1"
+        style={{ gridTemplateRows: `repeat(${weeks}, minmax(0, 1fr))` }}
+      >
         {cells.map(({ date: cellDate, inMonth }) => {
           const day = cellDate.getDate();
 
