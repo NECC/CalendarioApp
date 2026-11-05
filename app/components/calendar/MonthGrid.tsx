@@ -105,7 +105,7 @@ export const MonthGrid = memo(function MonthGrid({
                   })}
                   className={`w-full h-full flex items-center justify-center rounded-full text-sm font-semibold transition-all active:scale-95 ${
                     isSelected
-                      ? "bg-foreground text-background shadow-md"
+                      ? "bg-foreground/15 text-foreground shadow-sm"
                       : isToday
                         ? "bg-accent/15 text-accent border border-accent/30"
                         : "text-foreground hover:bg-muted/20"

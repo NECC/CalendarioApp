@@ -2,6 +2,7 @@
 
 import type { calendarEvent } from "@/types/calendar";
 import { getCategoryColor } from "../../../lib/category-colors";
+import { ShareButton } from "./ShareButton";
 
 interface DayAgendaProps {
   selectedDate: Date;
@@ -109,6 +110,7 @@ export function DayAgenda({ selectedDate, events }: DayAgendaProps) {
                 <span className="shrink-0 text-xs font-medium tabular-nums">
                   {formatTime(event)}
                 </span>
+                <ShareButton event={event} />
               </div>
             );
           })
