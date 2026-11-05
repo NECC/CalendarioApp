@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CATEGORY_COLORS } from "../../../lib/category-colors";
 import { SUBJECTS_DATA } from "../../../lib/subjects";
+import { NotificationSettings } from "./NotificationSettings";
 
 const YEARS = [
   {
@@ -243,6 +244,8 @@ export function FilterSheet({
         </div>
 
         <div className="p-6 pt-4 overflow-y-auto overscroll-contain flex flex-col">
+          <NotificationSettings years={years} subjects={subjects} />
+
           {YEARS.map(({ year, label, allLabel, color }) => {
             const isExpanded = expandedYears.includes(year);
             const yearSubjects = SUBJECTS_DATA.filter((s) => s.year === year);

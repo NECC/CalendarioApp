@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { TopBar } from "./TopBar";
 import { MonthGrid } from "./MonthGrid";
 import { CalendarSkeleton } from "./CalendarSkeleton";
@@ -33,27 +33,61 @@ interface EventCalendarProps {
   initialCategories?: Category[];
 }
 
+const FILTERS_KEY = "necc-filters";
+
+function loadSavedFilters(): { years: number[]; subjects: string[] } {
+  try {
+    const saved = JSON.parse(localStorage.getItem(FILTERS_KEY) ?? "{}");
+    return {
+      years: Array.isArray(saved.years) ? saved.years : [],
+      subjects: Array.isArray(saved.subjects) ? saved.subjects : [],
+    };
+  } catch {
+    return { years: [], subjects: [] };
+  }
+}
+
 interface CalendarState {
   month: Date;
   selected: Date;
 }
 
-export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
-  // null até montar no cliente (evita mismatch de hidratação com new Date())
-  const [calendar, setCalendar] = useState<CalendarState | null>(null);
+function initialCalendar(): CalendarState | null {
+  if (typeof window === "undefined") return null;
+  // Abrir num dia específico: as notificações abrem "/?date=YYYY-MM-DD".
+  const now = new Date();
+  const param = new URLSearchParams(window.location.search).get("date");
+  const match = param?.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const day = match
+    ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+    : new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return { month: new Date(day.getFullYear(), day.getMonth(), 1), selected: day };
+}
 
-  // Filtros combináveis: anos inteiros + disciplinas soltas, de qualquer ano
-  const [selectedYears, setSelectedYears] = useState<number[]>([]);
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
+  // Este componente só monta no cliente (a página mostra o esqueleto até os
+  // dados chegarem), por isso podemos usar new Date()/window logo no início.
+  const [calendar, setCalendar] = useState<CalendarState | null>(initialCalendar);
+
+  // Filtros combináveis: anos inteiros + disciplinas soltas, de qualquer ano.
+  // Ficam guardados no dispositivo (localStorage), para a pessoa não ter de
+  // os escolher sempre — e porque são também os filtros das notificações.
+  const [selectedYears, setSelectedYears] = useState<number[]>(
+    () => loadSavedFilters().years,
+  );
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(
+    () => loadSavedFilters().subjects,
+  );
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
-    const now = new Date();
-    setCalendar({
-      month: new Date(now.getFullYear(), now.getMonth(), 1),
-      selected: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-    });
-  }, []);
+    try {
+      localStorage.setItem(
+        FILTERS_KEY,
+        JSON.stringify({ years: selectedYears, subjects: selectedSubjects }),
+      );
+    } catch {}
+  }, [selectedYears, selectedSubjects]);
 
   const changeMonth = useCallback((delta: number) => {
     setCalendar((prev) => {
@@ -145,14 +179,15 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
 
   // Guarda o último dia com eventos: assim, ao fechar a agenda, o conteúdo
   // não desaparece de repente enquanto a altura anima até 0.
-  const lastAgenda = useRef<{ date: Date; events: calendarEvent[] } | null>(
-    null,
-  );
-  useEffect(() => {
-    if (selectedDay && dayEvents.length > 0) {
-      lastAgenda.current = { date: selectedDay, events: dayEvents };
-    }
-  }, [selectedDay, dayEvents]);
+  // (Padrão do React "ajustar estado durante o render": só atualiza quando
+  // a lista do dia muda, por isso não entra em ciclo.)
+  const [lastAgenda, setLastAgenda] = useState<{
+    date: Date;
+    events: calendarEvent[];
+  } | null>(null);
+  if (selectedDay && dayEvents.length > 0 && lastAgenda?.events !== dayEvents) {
+    setLastAgenda({ date: selectedDay, events: dayEvents });
+  }
 
   if (!calendar) return <CalendarSkeleton />;
 
@@ -160,7 +195,7 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
   const hasDayEvents = dayEvents.length > 0;
   const agenda = hasDayEvents
     ? { date: selected, events: dayEvents }
-    : lastAgenda.current;
+    : lastAgenda;
   const monthTitle = `${MONTH_KEYS[month.getMonth()].toUpperCase()} ${month.getFullYear()}`;
   const activeFilterCount = selectedYears.length + selectedSubjects.length;
 
