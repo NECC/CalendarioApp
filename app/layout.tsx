@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import { RegisterSW } from "@/app/components/RegisterSW";
+import { PushTester } from "@/app/components/PushTester"; // TEMPORÁRIO
+import { OfflineBanner } from "@/app/components/OfflineBanner";
+import { InstallPrompt } from "@/app/components/InstallPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +45,11 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="min-h-screen">
+        <RegisterSW />
+        <OfflineBanner />
+        <InstallPrompt />
         {children}
+        <PushTester />
       </body>
     </html>
   );
