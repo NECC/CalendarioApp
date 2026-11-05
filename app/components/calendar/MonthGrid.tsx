@@ -10,6 +10,8 @@ interface MonthGridProps {
   events: calendarEvent[];
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
+  /** IDs dos eventos com estrela (mostra uma ⭐ pequena nesse dia). */
+  starredIds?: Set<string>;
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -23,6 +25,7 @@ export const MonthGrid = memo(function MonthGrid({
   events,
   selectedDate,
   onSelectDate,
+  starredIds,
 }: MonthGridProps) {
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -48,6 +51,16 @@ export const MonthGrid = memo(function MonthGrid({
     return map;
   }, [events]);
 
+  // Dias que têm pelo menos um evento com estrela
+  const starredDays = useMemo(() => {
+    const set = new Set<string>();
+    if (!starredIds?.size) return set;
+    for (const event of events) {
+      if (starredIds.has(event.id)) set.add(dayKey(new Date(event.startTimestampnz)));
+    }
+    return set;
+  }, [events, starredIds]);
+
   const today = new Date();
 
   return (
@@ -68,20 +81,9 @@ export const MonthGrid = memo(function MonthGrid({
         {cells.map(({ date: cellDate, inMonth }) => {
           const day = cellDate.getDate();
 
+          // Dias de outros meses: célula vazia (mantém o alinhamento dos dias da semana).
           if (!inMonth) {
-            return (
-              <div
-                key={`out-${cellDate.getTime()}`}
-                className="min-h-0 flex items-center justify-center"
-                aria-hidden="true"
-              >
-                <div
-                  className={`${DAY_BOX} flex items-center justify-center rounded-full text-sm font-medium text-muted-foreground/30`}
-                >
-                  {day}
-                </div>
-              </div>
-            );
+            return <div key={`out-${cellDate.getTime()}`} aria-hidden="true" />;
           }
 
           const isToday = isSameDay(cellDate, today);
@@ -113,6 +115,17 @@ export const MonthGrid = memo(function MonthGrid({
                 >
                   {day}
                 </button>
+
+                {starredDays.has(dayKey(cellDate)) && (
+                  <svg
+                    className="absolute -top-0.5 -right-0.5 w-3 h-3 text-amber-400 pointer-events-none"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                )}
 
                 {categories.length > 0 && (
                   <div className="absolute bottom-1 left-0 right-0 flex gap-0.5 items-center justify-center pointer-events-none">

@@ -7,6 +7,8 @@ import { CalendarSkeleton } from "./CalendarSkeleton";
 import { DayAgenda } from "./DayAgenda";
 import { FilterSheet } from "./FilterSheet";
 import { useSwipe } from "../../../hooks/useSwipe";
+import { useStarred } from "../../../hooks/useStarred";
+import { usePushNotifications } from "../../../hooks/usePushNotifications";
 import { filterEvents } from "../../../lib/event-filters";
 import { defaultSelectedDate, isSameDay } from "../../../lib/date-utils";
 import { SUBJECTS_DATA } from "../../../lib/subjects";
@@ -88,6 +90,15 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
       );
     } catch {}
   }, [selectedYears, selectedSubjects]);
+
+  // Estrelas ⭐ + notificações. O hook das notificações vive aqui (e não no
+  // ecrã de filtros) para que dar/tirar estrela sincronize logo com o servidor.
+  const { starred, starredSet, toggleStar } = useStarred();
+  const pushPrefs = useMemo(
+    () => ({ years: selectedYears, subjects: selectedSubjects, starred }),
+    [selectedYears, selectedSubjects, starred],
+  );
+  const push = usePushNotifications(pushPrefs);
 
   const changeMonth = useCallback((delta: number) => {
     setCalendar((prev) => {
@@ -224,6 +235,7 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
             events={filteredEvents}
             selectedDate={selected}
             onSelectDate={selectDate}
+            starredIds={starredSet}
           />
         </div>
       </div>
@@ -239,7 +251,13 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
         }`}
       >
         {agenda && (
-          <DayAgenda selectedDate={agenda.date} events={agenda.events} />
+          <DayAgenda
+            selectedDate={agenda.date}
+            events={agenda.events}
+            starredIds={starredSet}
+            onToggleStar={toggleStar}
+            notificationsOn={push.status === "on"}
+          />
         )}
       </div>
 
@@ -252,6 +270,7 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
           onToggleSubject={toggleSubject}
           onClear={clearFilters}
           onClose={closeFilters}
+          push={push}
         />
       )}
     </div>

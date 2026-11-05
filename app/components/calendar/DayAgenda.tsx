@@ -2,12 +2,49 @@
 
 import type { calendarEvent } from "@/types/calendar";
 import { getCategoryColor } from "../../../lib/category-colors";
-import { ShareButton } from "./ShareButton";
 
 interface DayAgendaProps {
   selectedDate: Date;
   /** Eventos do dia selecionado, já filtrados e ordenados por hora. */
   events: calendarEvent[];
+  starredIds: Set<string>;
+  onToggleStar: (id: string) => void;
+  /** Se os avisos estão desligados, mostramos uma dica ao dar estrela. */
+  notificationsOn: boolean;
+}
+
+function StarButton({
+  event,
+  active,
+  onToggle,
+}: {
+  event: calendarEvent;
+  active: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      aria-pressed={active}
+      aria-label={active ? `Tirar estrela de ${event.title}` : `Dar estrela a ${event.title}`}
+      title={active ? "Tirar estrela" : "Dar estrela (recebes avisos nos 5 dias antes)"}
+      className={`shrink-0 -mr-1 p-1 rounded-full transition active:scale-75 ${
+        active ? "text-amber-400" : "opacity-60 hover:opacity-100"
+      }`}
+    >
+      <svg
+        className="w-5 h-5"
+        viewBox="0 0 24 24"
+        fill={active ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
+    </button>
+  );
 }
 
 const TIME_FORMAT: Intl.DateTimeFormatOptions = {
@@ -55,7 +92,15 @@ function CategoryIcon({ category }: { category: string }) {
   );
 }
 
-export function DayAgenda({ selectedDate, events }: DayAgendaProps) {
+export function DayAgenda({
+  selectedDate,
+  events,
+  starredIds,
+  onToggleStar,
+  notificationsOn,
+}: DayAgendaProps) {
+  const showHint = !notificationsOn && events.some((e) => starredIds.has(e.id));
+
   // Formata a data e remove a palavra "de" (ex: "5 novembro 2026")
   const fullDate = selectedDate
     .toLocaleDateString("pt-PT", {
@@ -76,6 +121,12 @@ export function DayAgenda({ selectedDate, events }: DayAgendaProps) {
           {headerText}
         </span>
       </div>
+
+      {showHint && (
+        <p className="shrink-0 px-1 mb-2 text-xs text-muted-foreground">
+          ⭐ Para seres avisado deste teste, liga os <b>Avisos dos testes</b> nos filtros.
+        </p>
+      )}
 
       {/* Lista de Eventos (com scroll) */}
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col gap-2 pb-2">
@@ -110,7 +161,11 @@ export function DayAgenda({ selectedDate, events }: DayAgendaProps) {
                 <span className="shrink-0 text-xs font-medium tabular-nums">
                   {formatTime(event)}
                 </span>
-                <ShareButton event={event} />
+                <StarButton
+                  event={event}
+                  active={starredIds.has(event.id)}
+                  onToggle={() => onToggleStar(event.id)}
+                />
               </div>
             );
           })

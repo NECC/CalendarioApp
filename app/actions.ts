@@ -9,6 +9,7 @@
 // =============================================================
 import type { PushSubscription } from "web-push";
 import { SUBJECTS_DATA } from "@/lib/subjects";
+import { getCalendarEvents } from "@/lib/calendar-data";
 import {
   deleteSubscription,
   getSubscription,
@@ -19,6 +20,7 @@ import { sendPush } from "@/lib/push-send";
 
 const VALID_YEARS = new Set([0, 1, 2, 3]);
 const VALID_SUBJECTS = new Set(SUBJECTS_DATA.map((s) => s.sigla));
+const VALID_EVENT_IDS = new Set(getCalendarEvents().map((e) => e.id));
 
 function cleanPreferences(p: unknown): Preferences {
   const obj = (p ?? {}) as Partial<Preferences>;
@@ -28,7 +30,11 @@ function cleanPreferences(p: unknown): Preferences {
   const subjects = Array.isArray(obj.subjects)
     ? [...new Set(obj.subjects.filter((s) => VALID_SUBJECTS.has(s)))]
     : [];
-  return { years, subjects };
+  // Só aceitamos IDs de testes que existem mesmo (e no máximo 200).
+  const starred = Array.isArray(obj.starred)
+    ? [...new Set(obj.starred.filter((id) => VALID_EVENT_IDS.has(id)))].slice(0, 200)
+    : [];
+  return { years, subjects, starred };
 }
 
 function cleanSubscription(s: unknown): PushSubscription | null {
@@ -82,7 +88,7 @@ export async function sendTestNotification(endpoint: string) {
 
   const r = await sendPush(existing.subscription, {
     title: "NECC Calendário 🔔",
-    body: "As notificações estão a funcionar! Vais ser avisado na véspera e uma semana antes.",
+    body: "As notificações estão a funcionar! Dá ⭐ aos teus testes para seres avisado nos 5 dias antes.",
     url: "/",
     tag: "teste",
   });

@@ -86,22 +86,35 @@ const YEAR_TO_CATEGORY: Record<string, string> = {
   "3º ano": "ano3",
 };
 
+/** Ex.: "ano1-2026-11-08-calculo-teste" */
+function eventId(categoryId: string, item: RawItem): string {
+  const slug = `${item.uc}-${item.type}`
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // tira acentos
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `${categoryId}-${item.day}-${slug}`;
+}
+
 export function getCalendarEvents(): calendarEvent[] {
   const events: calendarEvent[] = [];
 
   for (const [ano, lista] of Object.entries(RAW_DATA)) {
     const categoryId = YEAR_TO_CATEGORY[ano] ?? "eventos";
 
-    lista.forEach((item, index) => {
+    for (const item of lista) {
       events.push({
-        id: `${categoryId}-${index}`,
+        // ID estável (não depende da ordem na lista): é usado para guardar
+        // as estrelas — se mudasse, as estrelas iam parar ao teste errado.
+        id: eventId(categoryId, item),
         title: `${item.uc} - ${item.type}`,
         description: item.type,
         startTimestampnz: `${item.day}T09:00:00`,
         endTimestampnz: `${item.day}T11:00:00`,
         category: categoryId,
       });
-    });
+    }
   }
 
   return events;
