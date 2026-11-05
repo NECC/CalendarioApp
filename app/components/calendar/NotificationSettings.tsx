@@ -3,11 +3,11 @@
 // As notificações usam os MESMOS filtros que o calendário:
 // o que vês no calendário é aquilo de que és avisado.
 
-import { usePushNotifications } from "@/hooks/usePushNotifications";
+import type { PushControls } from "@/hooks/usePushNotifications";
 
 interface Props {
-  years: number[];
-  subjects: string[];
+  push: PushControls;
+  hasFilters: boolean;
 }
 
 function BellIcon() {
@@ -19,9 +19,8 @@ function BellIcon() {
   );
 }
 
-export function NotificationSettings({ years, subjects }: Props) {
-  const { status, busy, message, enable, disable, sendTest } = usePushNotifications({ years, subjects });
-  const hasFilters = years.length > 0 || subjects.length > 0;
+export function NotificationSettings({ push, hasFilters }: Props) {
+  const { status, busy, message, enable, disable, sendTest } = push;
 
   let description: React.ReactNode;
   switch (status) {
@@ -39,12 +38,19 @@ export function NotificationSettings({ years, subjects }: Props) {
       description = "Bloqueaste as notificações. Para as ativar, muda a permissão nas definições do browser/telemóvel.";
       break;
     case "on":
-      description = hasFilters
-        ? "Recebes aviso na véspera e uma semana antes das avaliações selecionadas abaixo."
-        : "Recebes aviso de TODAS as avaliações. Seleciona as tuas UCs abaixo para receberes só essas.";
+      description = (
+        <>
+          ⭐ <b>Testes com estrela:</b> aviso todos os dias desde 5 dias antes até ao próprio dia.
+          <br />
+          {hasFilters
+            ? "Restantes avaliações selecionadas abaixo: aviso na véspera e uma semana antes."
+            : "Restantes avaliações (todas, sem filtros): aviso na véspera e uma semana antes. Seleciona as tuas UCs abaixo para receberes só essas."}
+        </>
+      );
       break;
     default:
-      description = "Recebe um aviso na véspera e uma semana antes dos teus testes e entregas.";
+      description =
+        "Liga para receberes avisos dos teus testes. Dá ⭐ a um teste na agenda para seres avisado todos os dias nos 5 dias antes.";
   }
 
   const canToggle = status === "on" || status === "off";
