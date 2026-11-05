@@ -33,7 +33,7 @@ export default function Home() {
   }
 
   return (
-    <main style={{ display: "flex", width: "100%", minHeight: "100vh" }}>
+    <main className="flex w-full h-dvh overflow-hidden">
       <EventCalendar initialEvents={events} initialCategories={categories} />
     </main>
   );

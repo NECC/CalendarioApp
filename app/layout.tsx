@@ -66,7 +66,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className="min-h-screen">
+      <body>
         <RegisterSW />
         <OfflineBanner />
         <InstallPrompt />
