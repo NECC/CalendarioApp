@@ -94,6 +94,9 @@ self.addEventListener("push", (event) => {
     icon: "/icons/necc-icon-192.png", // ícone grande da notificação
     badge: "/icons/necc-icon-192-monochrome.png", // ícone pequeno (Android, barra de estado)
     data: { url: data.url || "/" }, // guardamos o URL para usar no clique
+    // Notificações com a mesma tag substituem-se em vez de se acumularem.
+    tag: data.tag,
+    renotify: Boolean(data.tag),
   };
 
   // Sem waitUntil, o browser podia matar o SW antes de a notificação aparecer.
@@ -112,7 +115,10 @@ self.addEventListener("notificationclick", (event) => {
       const abas = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       for (const aba of abas) {
         if ("focus" in aba) {
-          await aba.navigate(url);
+          // navigate() só funciona em abas controladas por este SW; se falhar, focamos na mesma.
+          try {
+            await aba.navigate(url);
+          } catch {}
           return aba.focus();
         }
       }
