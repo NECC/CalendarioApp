@@ -2,7 +2,6 @@
 
 import type { calendarEvent } from "@/types/calendar";
 import { getCategoryColor } from "../../../lib/category-colors";
-import { isSameDay } from "../../../lib/date-utils";
 
 interface DayAgendaProps {
   selectedDate: Date;

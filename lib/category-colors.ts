@@ -1,5 +1,5 @@
 // Fonte única das cores por categoria (antes estava duplicada em
-// EventChip, MonthGrid e EventCalendar).
+// MonthGrid e EventCalendar).
 export const CATEGORY_COLORS: Record<string, string> = {
   ano1: "#3B82F6", // Azul (1º Ano)
   ano2: "#10B981", // Verde (2º Ano)
