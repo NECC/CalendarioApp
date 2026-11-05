@@ -211,7 +211,7 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
   const activeFilterCount = selectedYears.length + selectedSubjects.length;
 
   return (
-    <div className="flex flex-col w-full h-dvh bg-background text-foreground p-4 max-w-lg mx-auto relative overflow-hidden">
+    <div className="flex flex-col w-full h-dvh bg-background text-foreground px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] max-w-lg mx-auto relative overflow-hidden">
       <div className="shrink-0 mb-4">
         <TopBar
           monthTitle={monthTitle}
