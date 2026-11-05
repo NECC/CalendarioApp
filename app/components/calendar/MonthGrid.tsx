@@ -15,6 +15,9 @@ interface MonthGridProps {
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const TOTAL_CELLS = 42; // 6 semanas: altura constante entre meses
 
+// Cada dia é um círculo que cresce com a altura disponível (até 2.75rem)
+const DAY_BOX = "relative h-full max-h-11 aspect-square";
+
 export const MonthGrid = memo(function MonthGrid({
   date,
   events,
@@ -24,7 +27,6 @@ export const MonthGrid = memo(function MonthGrid({
   const year = date.getFullYear();
   const month = date.getMonth();
 
-  // 42 células; os dias fora do mês aparecem esbatidos
   const cells = useMemo(() => {
     const firstWeekday = new Date(year, month, 1).getDay();
     return Array.from({ length: TOTAL_CELLS }, (_, i) => {
@@ -33,7 +35,6 @@ export const MonthGrid = memo(function MonthGrid({
     });
   }, [year, month]);
 
-  // Categorias únicas (máx. 3) por dia, calculadas numa só passagem
   const categoriesByDay = useMemo(() => {
     const map = new Map<string, string[]>();
     for (const event of events) {
@@ -50,8 +51,8 @@ export const MonthGrid = memo(function MonthGrid({
   const today = new Date();
 
   return (
-    <div className="w-full bg-card p-4 rounded-3xl pb-6">
-      <div className="grid grid-cols-7 mb-4">
+    <div className="w-full flex-1 min-h-0 flex flex-col bg-card p-4 rounded-3xl">
+      <div className="grid grid-cols-7 mb-2 shrink-0">
         {WEEKDAYS.map((day) => (
           <div
             key={day}
@@ -62,7 +63,8 @@ export const MonthGrid = memo(function MonthGrid({
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-y-3 gap-x-1 justify-items-center">
+      {/* 6 linhas que repartem a altura toda do cartão */}
+      <div className="flex-1 min-h-0 grid grid-cols-7 grid-rows-6 gap-x-1">
         {cells.map(({ date: cellDate, inMonth }) => {
           const day = cellDate.getDate();
 
@@ -70,10 +72,14 @@ export const MonthGrid = memo(function MonthGrid({
             return (
               <div
                 key={`out-${cellDate.getTime()}`}
-                className="w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium text-muted-foreground/30"
+                className="min-h-0 flex items-center justify-center"
                 aria-hidden="true"
               >
-                {day}
+                <div
+                  className={`${DAY_BOX} flex items-center justify-center rounded-full text-sm font-medium text-muted-foreground/30`}
+                >
+                  {day}
+                </div>
               </div>
             );
           }
@@ -85,39 +91,41 @@ export const MonthGrid = memo(function MonthGrid({
           return (
             <div
               key={`day-${day}`}
-              className="relative flex justify-center items-center w-10 h-10"
+              className="min-h-0 flex items-center justify-center"
             >
-              <button
-                onClick={() => onSelectDate(cellDate)}
-                aria-pressed={isSelected}
-                aria-current={isToday ? "date" : undefined}
-                aria-label={cellDate.toLocaleDateString("pt-PT", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-                className={`w-full h-full flex items-center justify-center rounded-full text-sm font-semibold transition-all active:scale-95 ${
-                  isSelected
-                    ? "bg-foreground text-background shadow-md"
-                    : isToday
-                      ? "bg-accent/15 text-accent border border-accent/30"
-                      : "text-foreground hover:bg-muted/20"
-                }`}
-              >
-                {day}
-              </button>
+              <div className={DAY_BOX}>
+                <button
+                  onClick={() => onSelectDate(cellDate)}
+                  aria-pressed={isSelected}
+                  aria-current={isToday ? "date" : undefined}
+                  aria-label={cellDate.toLocaleDateString("pt-PT", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                  className={`w-full h-full flex items-center justify-center rounded-full text-sm font-semibold transition-all active:scale-95 ${
+                    isSelected
+                      ? "bg-foreground text-background shadow-md"
+                      : isToday
+                        ? "bg-accent/15 text-accent border border-accent/30"
+                        : "text-foreground hover:bg-muted/20"
+                  }`}
+                >
+                  {day}
+                </button>
 
-              {categories.length > 0 && (
-                <div className="absolute bottom-1 flex gap-0.5 items-center justify-center pointer-events-none">
-                  {categories.map((cat) => (
-                    <div
-                      key={cat}
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{ backgroundColor: getCategoryColor(cat) }}
-                    />
-                  ))}
-                </div>
-              )}
+                {categories.length > 0 && (
+                  <div className="absolute bottom-1 left-0 right-0 flex gap-0.5 items-center justify-center pointer-events-none">
+                    {categories.map((cat) => (
+                      <div
+                        key={cat}
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: getCategoryColor(cat) }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}

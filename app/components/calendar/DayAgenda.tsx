@@ -1,18 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
 import type { calendarEvent } from "@/types/calendar";
-import { getCategoryColor } from "@/lib/category-colors";
-import { isSameDay } from "@/lib/date-utils";
+import { getCategoryColor } from "../../../lib/category-colors";
+import { isSameDay } from "../../../lib/date-utils";
 
 interface DayAgendaProps {
   selectedDate: Date;
+  /** Eventos do dia selecionado, já filtrados e ordenados por hora. */
   events: calendarEvent[];
 }
 
 const TIME_FORMAT: Intl.DateTimeFormatOptions = {
   hour: "2-digit",
   minute: "2-digit",
+  hour12: false,
 };
 
 export function DayAgenda({ selectedDate, events }: DayAgendaProps) {
@@ -26,76 +27,53 @@ export function DayAgenda({ selectedDate, events }: DayAgendaProps) {
         year: "numeric",
       });
 
-  const dayEvents = useMemo(
-    () =>
-      events
-        .filter((e) => isSameDay(new Date(e.startTimestampnz), selectedDate))
-        .sort(
-          (a, b) =>
-            new Date(a.startTimestampnz).getTime() -
-            new Date(b.startTimestampnz).getTime(),
-        ),
-    [events, selectedDate],
-  );
-
   return (
-    <div className="flex flex-col gap-3 w-full bg-card rounded-3xl border border-border p-5 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-baseline gap-3">
-          <span className="text-3xl font-extrabold text-foreground tracking-tight">
-            {dayNumber}
-          </span>
-          <div className="flex flex-col">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              {label}
-            </span>
-            <span className="text-sm font-semibold text-foreground">
-              {dayName}
-            </span>
-          </div>
-        </div>
-
-        <span className="text-xs font-medium px-3 py-1 rounded-full bg-muted/20 text-foreground/80">
-          {dayEvents.length} {dayEvents.length === 1 ? "event" : "events"}
+    <div className="flex-1 min-h-0 flex flex-col w-full bg-card rounded-3xl border border-border pt-4 px-5 pb-3 shadow-sm">
+      {/* Cabeçalho numa só linha */}
+      <div className="flex items-baseline gap-2 shrink-0">
+        <span className="text-3xl font-extrabold text-foreground tracking-tight">
+          {dayNumber}
+        </span>
+        <span className="text-sm font-semibold text-foreground">{dayName}</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          {label}
         </span>
       </div>
 
-      <div className="flex flex-col gap-2.5 mt-2">
-        {dayEvents.length === 0 ? (
-          <p className="text-xs text-muted-foreground py-4 text-center">
-            Sem eventos para este dia.
-          </p>
-        ) : (
-          dayEvents.map((event) => {
-            const startTime = new Date(
-              event.startTimestampnz,
-            ).toLocaleTimeString([], TIME_FORMAT);
-            const endTime = new Date(event.endTimestampnz).toLocaleTimeString(
-              [],
-              TIME_FORMAT,
-            );
+      {/* Só esta lista faz scroll */}
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col gap-2 mt-3 pb-2">
+        {events.map((event) => {
+          const startTime = new Date(event.startTimestampnz).toLocaleTimeString(
+            [],
+            TIME_FORMAT,
+          );
+          const endTime = new Date(event.endTimestampnz).toLocaleTimeString(
+            [],
+            TIME_FORMAT,
+          );
 
-            return (
-              <div
-                key={event.id}
-                className="flex flex-col p-3.5 rounded-2xl bg-muted/10 border border-border/50 gap-1 transition-all hover:border-accent/40 border-l-4"
-                style={{ borderLeftColor: getCategoryColor(event.category) }}
-              >
-                <span className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
-                  {startTime} - {endTime}
-                </span>
-                <span className="text-sm font-bold text-foreground">
-                  {event.title}
-                </span>
+          return (
+            <div
+              key={event.id}
+              className="shrink-0 flex items-center gap-3 px-3.5 py-3 rounded-2xl bg-muted/10 border border-border/50 transition-all hover:border-accent/40 border-l-4"
+              style={{ borderLeftColor: getCategoryColor(event.category) }}
+              title={event.description || event.title}
+            >
+              <span className="shrink-0 text-[11px] font-bold tracking-wide text-muted-foreground tabular-nums">
+                {startTime}–{endTime}
+              </span>
+              <p className="min-w-0 flex-1 truncate text-sm">
+                <span className="font-bold text-foreground">{event.title}</span>
                 {event.description && (
                   <span className="text-xs text-muted-foreground">
-                    {event.description}
+                    {" "}
+                    · {event.description}
                   </span>
                 )}
-              </div>
-            );
-          })
-        )}
+              </p>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -1,15 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TopBar } from "./TopBar";
 import { MonthGrid } from "./MonthGrid";
 import { CalendarSkeleton } from "./CalendarSkeleton";
 import { DayAgenda } from "./DayAgenda";
 import { FilterSheet } from "./FilterSheet";
-import { useSwipe } from "@/hooks/useSwipe";
-import { filterEvents } from "@/lib/event-filters";
-import { defaultSelectedDate } from "@/lib/date-utils";
-import type { YearFilter } from "@/lib/subjects";
+import { useSwipe } from "../../../hooks/useSwipe";
+import { filterEvents } from "../../../lib/event-filters";
+import { defaultSelectedDate, isSameDay } from "../../../lib/date-utils";
+import { SUBJECTS_DATA } from "../../../lib/subjects";
 import type { calendarEvent, Category } from "@/types/calendar";
 
 const MONTH_KEYS = [
@@ -42,7 +42,8 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
   // null até montar no cliente (evita mismatch de hidratação com new Date())
   const [calendar, setCalendar] = useState<CalendarState | null>(null);
 
-  const [selectedYear, setSelectedYear] = useState<YearFilter>("all");
+  // Filtros combináveis: anos inteiros + disciplinas soltas, de qualquer ano
+  const [selectedYears, setSelectedYears] = useState<number[]>([]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -80,50 +81,109 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
 
   const closeFilters = useCallback(() => setIsFilterOpen(false), []);
 
-  const toggleSubject = useCallback((sigla: string) => {
+  // Marcar um ano inteiro substitui as disciplinas soltas desse ano
+  const toggleYear = useCallback((year: number) => {
+    setSelectedYears((prev) =>
+      prev.includes(year) ? prev.filter((y) => y !== year) : [...prev, year],
+    );
     setSelectedSubjects((prev) =>
-      prev.includes(sigla) ? prev.filter((s) => s !== sigla) : [...prev, sigla],
+      prev.filter(
+        (sigla) => SUBJECTS_DATA.find((s) => s.sigla === sigla)?.year !== year,
+      ),
     );
   }, []);
 
-  const changeYear = useCallback((year: YearFilter) => {
-    setSelectedYear(year);
-    setSelectedSubjects([]); // trocar de ano limpa as disciplinas
-  }, []);
+  const toggleSubject = useCallback(
+    (sigla: string) => {
+      const subject = SUBJECTS_DATA.find((s) => s.sigla === sigla);
+      if (!subject) return;
+
+      // Desmarcar uma disciplina de um ano inteiro selecionado:
+      // o ano passa a disciplinas explícitas, menos a desmarcada.
+      if (selectedYears.includes(subject.year)) {
+        setSelectedYears((prev) => prev.filter((y) => y !== subject.year));
+        setSelectedSubjects((prev) => [
+          ...prev,
+          ...SUBJECTS_DATA.filter(
+            (s) => s.year === subject.year && s.sigla !== sigla,
+          ).map((s) => s.sigla),
+        ]);
+        return;
+      }
+
+      setSelectedSubjects((prev) =>
+        prev.includes(sigla)
+          ? prev.filter((s) => s !== sigla)
+          : [...prev, sigla],
+      );
+    },
+    [selectedYears],
+  );
 
   const clearFilters = useCallback(() => {
-    setSelectedYear("all");
+    setSelectedYears([]);
     setSelectedSubjects([]);
   }, []);
 
   const filteredEvents = useMemo(
-    () => filterEvents(initialEvents, selectedYear, selectedSubjects),
-    [initialEvents, selectedYear, selectedSubjects],
+    () => filterEvents(initialEvents, selectedYears, selectedSubjects),
+    [initialEvents, selectedYears, selectedSubjects],
   );
+
+  // Eventos do dia selecionado (ordenados por hora). Sem eventos => sem agenda.
+  const selectedDay = calendar?.selected;
+  const dayEvents = useMemo(() => {
+    if (!selectedDay) return [];
+    return filteredEvents
+      .filter((e) => isSameDay(new Date(e.startTimestampnz), selectedDay))
+      .sort(
+        (a, b) =>
+          new Date(a.startTimestampnz).getTime() -
+          new Date(b.startTimestampnz).getTime(),
+      );
+  }, [filteredEvents, selectedDay]);
+
+  // Guarda o último dia com eventos: assim, ao fechar a agenda, o conteúdo
+  // não desaparece de repente enquanto a altura anima até 0.
+  const lastAgenda = useRef<{ date: Date; events: calendarEvent[] } | null>(
+    null,
+  );
+  useEffect(() => {
+    if (selectedDay && dayEvents.length > 0) {
+      lastAgenda.current = { date: selectedDay, events: dayEvents };
+    }
+  }, [selectedDay, dayEvents]);
 
   if (!calendar) return <CalendarSkeleton />;
 
   const { month, selected } = calendar;
+  const hasDayEvents = dayEvents.length > 0;
+  const agenda = hasDayEvents
+    ? { date: selected, events: dayEvents }
+    : lastAgenda.current;
   const monthTitle = `${MONTH_KEYS[month.getMonth()].toUpperCase()} ${month.getFullYear()}`;
-  const activeFilterCount =
-    (selectedYear !== "all" ? 1 : 0) + selectedSubjects.length;
+  const activeFilterCount = selectedYears.length + selectedSubjects.length;
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-background text-foreground p-4 gap-4 max-w-lg mx-auto relative overflow-hidden">
-      <TopBar
-        monthTitle={monthTitle}
-        onPrevMonth={goPrev}
-        onNextMonth={goNext}
-        onOpenFilters={() => setIsFilterOpen(true)}
-        activeFilterCount={activeFilterCount}
-      />
+    <div className="flex flex-col w-full h-dvh bg-background text-foreground p-4 max-w-lg mx-auto relative overflow-hidden">
+      <div className="shrink-0 mb-4">
+        <TopBar
+          monthTitle={monthTitle}
+          onOpenFilters={() => setIsFilterOpen(true)}
+          activeFilterCount={activeFilterCount}
+        />
+      </div>
 
-      {/* Contentor com swipe: o interior (swipeRef) acompanha o dedo */}
+      {/* Calendário: cresce/encolhe com transição quando a agenda abre/fecha */}
       <div
-        className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden select-none touch-pan-y"
+        style={{ flexGrow: 3 }}
+        className="basis-0 min-h-0 flex flex-col bg-card rounded-3xl border border-border shadow-sm overflow-hidden select-none touch-pan-y"
         {...swipeHandlers}
       >
-        <div ref={swipeRef} className="will-change-transform">
+        <div
+          ref={swipeRef}
+          className="flex-1 min-h-0 flex flex-col will-change-transform"
+        >
           <MonthGrid
             date={month}
             events={filteredEvents}
@@ -133,14 +193,27 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
         </div>
       </div>
 
-      <DayAgenda selectedDate={selected} events={filteredEvents} />
+      {/* Agenda: está sempre montada; só anima flex-grow, altura mínima e margem */}
+      <div
+        style={{ flexGrow: hasDayEvents ? 1 : 0 }}
+        aria-hidden={!hasDayEvents}
+        className={`basis-0 flex flex-col overflow-hidden transition-[flex-grow,min-height,margin,opacity] duration-300 ease-out motion-reduce:transition-none ${
+          hasDayEvents
+            ? "min-h-[10rem] mt-4 opacity-100"
+            : "min-h-0 mt-0 opacity-0 pointer-events-none"
+        }`}
+      >
+        {agenda && (
+          <DayAgenda selectedDate={agenda.date} events={agenda.events} />
+        )}
+      </div>
 
       {isFilterOpen && (
         <FilterSheet
-          year={selectedYear}
+          years={selectedYears}
           subjects={selectedSubjects}
           resultCount={filteredEvents.length}
-          onYearChange={changeYear}
+          onToggleYear={toggleYear}
           onToggleSubject={toggleSubject}
           onClear={clearFilters}
           onClose={closeFilters}

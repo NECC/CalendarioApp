@@ -1,39 +1,37 @@
-// Reproduz o layout mobile do EventCalendar (barra, grelha, agenda)
-// para não haver "salto" quando o calendário real monta.
+// Reproduz o layout do EventCalendar (barra, calendário 3/4, agenda 1/4)
 export function CalendarSkeleton() {
   return (
     <div
-      className="flex flex-col w-full min-h-screen bg-background p-4 gap-4 max-w-lg mx-auto animate-pulse"
+      className="flex flex-col w-full h-dvh bg-background p-4 gap-4 max-w-lg mx-auto animate-pulse overflow-hidden"
       aria-busy="true"
       aria-label="A carregar calendário"
     >
-      {/* TopBar */}
-      <div className="flex items-center justify-between w-full px-1 py-2">
-        <div className="h-10 w-56 rounded-full bg-muted/30" />
+      <div className="flex items-center justify-between w-full px-1 shrink-0">
+        <div className="h-10 w-48 rounded-full bg-muted/30" />
         <div className="h-10 w-10 rounded-full bg-muted/30" />
       </div>
 
-      {/* Grelha do mês */}
-      <div className="bg-card rounded-3xl border border-border p-4 pb-6">
-        <div className="grid grid-cols-7 mb-4 gap-1">
+      <div className="flex-[3_1_0%] min-h-0 bg-card rounded-3xl border border-border p-4 flex flex-col gap-3">
+        <div className="grid grid-cols-7 gap-1 shrink-0">
           {Array.from({ length: 7 }, (_, i) => (
             <div key={i} className="h-3 mx-2 rounded bg-muted/30" />
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-y-3 gap-x-1 justify-items-center">
+        <div className="flex-1 min-h-0 grid grid-cols-7 grid-rows-6 gap-x-1">
           {Array.from({ length: 42 }, (_, i) => (
-            <div key={i} className="w-10 h-10 rounded-full bg-muted/15" />
+            <div key={i} className="flex items-center justify-center min-h-0">
+              <div className="h-full max-h-11 aspect-square rounded-full bg-muted/15" />
+            </div>
           ))}
         </div>
       </div>
 
-      {/* Agenda do dia */}
-      <div className="bg-card rounded-3xl border border-border p-5 flex flex-col gap-3">
+      <div className="flex-[1_1_0%] min-h-[10rem] bg-card rounded-3xl border border-border p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="h-9 w-32 rounded bg-muted/30" />
           <div className="h-6 w-20 rounded-full bg-muted/30" />
         </div>
-        <div className="h-16 rounded-2xl bg-muted/15" />
+        <div className="h-14 rounded-2xl bg-muted/15" />
       </div>
     </div>
   );
