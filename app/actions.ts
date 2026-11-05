@@ -88,7 +88,7 @@ export async function sendTestNotification(endpoint: string) {
 
   const r = await sendPush(existing.subscription, {
     title: "NECC Calendário 🔔",
-    body: "As notificações estão a funcionar! Dá ⭐ aos teus testes para seres avisado nos 5 dias antes.",
+    body: "As notificações estão a funcionar! Dá ⭐ aos teus testes para receberes um aviso por dia, às 10h, na semana antes.",
     url: "/",
     tag: "teste",
   });

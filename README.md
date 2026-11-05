@@ -6,8 +6,7 @@ PWA com o calendário de testes, entregas e eventos de LCC, com avisos por notif
 
 - **Instalável** no ecrã principal (Android, iPhone, PC) — `public/manifest.json` + `app/components/InstallPrompt.tsx`
 - **Funciona offline** — o service worker (`public/sw.js`) guarda a última versão das datas
-- **Estrelas ⭐**: testes com estrela recebem aviso todos os dias desde 5 dias antes até ao próprio dia (de manhã)
-- **Notificações push** na véspera e uma semana antes das restantes avaliações das UCs que a pessoa tem nos filtros
+- **Estrelas ⭐ + notificações push**: ao dar estrela a um teste, a app pede logo permissão; a partir de uma semana antes recebes um aviso **todos os dias às 10h** (hora de Lisboa) com o tempo que falta, até ao próprio dia
 
 ## Desenvolvimento local
 
@@ -22,8 +21,8 @@ Sem as variáveis do Redis, as subscrições ficam em memória (perdem-se ao rei
 Disparar o cron à mão:
 
 ```bash
-curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/notify?slot=evening"
-curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/notify?slot=morning"
+# ?force=1 ignora a verificação "são 10h em Lisboa?"
+curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/notify?force=1"
 ```
 
 ## Deploy na Vercel
@@ -36,11 +35,8 @@ curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/not
    - `VAPID_SUBJECT` (ex.: `mailto:email-do-necc@...`)
    - `CRON_SECRET`
 4. **Redeploy** (as variáveis só entram num deploy novo).
-5. Os crons em `vercel.json` correm todos os dias:
-   - **06:00 UTC** (6h/7h em Lisboa) — testes com ⭐ que são hoje
-   - **18:00 UTC** (18h/19h em Lisboa) — ⭐ 1 a 5 dias antes + véspera/semana dos restantes
-
-   No plano gratuito podem atrasar até ~1h.
+5. Os crons em `vercel.json` correm às **09:00 e 10:00 UTC**; o código só envia na chamada em que são **10h em Lisboa** (assim funciona na hora de inverno e de verão). No plano gratuito a Vercel pode atrasar até ~1h dentro dessa hora.
+6. Para verificar a configuração: abre `/api/push/health` — tem de dar `"ok": true`.
 
 ⚠️ Usa sempre as **mesmas chaves VAPID**: se as mudares, todas as subscrições existentes deixam de funcionar.
 

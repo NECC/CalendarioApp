@@ -1,13 +1,11 @@
 "use client";
-// Secção "Avisos" no topo do ecrã de filtros.
-// As notificações usam os MESMOS filtros que o calendário:
-// o que vês no calendário é aquilo de que és avisado.
+// Secção "Avisos" no topo do ecrã de filtros: ligar/desligar e testar.
+// Os avisos são só dos testes com estrela ⭐ (ver lib/notify.ts).
 
 import type { PushControls } from "@/hooks/usePushNotifications";
 
 interface Props {
   push: PushControls;
-  hasFilters: boolean;
 }
 
 function BellIcon() {
@@ -19,7 +17,7 @@ function BellIcon() {
   );
 }
 
-export function NotificationSettings({ push, hasFilters }: Props) {
+export function NotificationSettings({ push }: Props) {
   const { status, busy, message, enable, disable, sendTest } = push;
 
   let description: React.ReactNode;
@@ -40,17 +38,14 @@ export function NotificationSettings({ push, hasFilters }: Props) {
     case "on":
       description = (
         <>
-          ⭐ <b>Testes com estrela:</b> aviso todos os dias desde 5 dias antes até ao próprio dia.
-          <br />
-          {hasFilters
-            ? "Restantes avaliações selecionadas abaixo: aviso na véspera e uma semana antes."
-            : "Restantes avaliações (todas, sem filtros): aviso na véspera e uma semana antes. Seleciona as tuas UCs abaixo para receberes só essas."}
+          Avisos ligados. Dá ⭐ a um teste na agenda e recebes um aviso <b>todos os dias às 10h</b>,
+          desde uma semana antes até ao dia do teste.
         </>
       );
       break;
     default:
       description =
-        "Liga para receberes avisos dos teus testes. Dá ⭐ a um teste na agenda para seres avisado todos os dias nos 5 dias antes.";
+        "Dá ⭐ a um teste na agenda para receberes um aviso todos os dias às 10h, desde uma semana antes.";
   }
 
   const canToggle = status === "on" || status === "off";

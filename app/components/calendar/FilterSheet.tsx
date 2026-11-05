@@ -247,10 +247,7 @@ export function FilterSheet({
         </div>
 
         <div className="p-6 pt-4 overflow-y-auto overscroll-contain flex flex-col">
-          <NotificationSettings
-            push={push}
-            hasFilters={years.length > 0 || subjects.length > 0}
-          />
+          <NotificationSettings push={push} />
 
           {YEARS.map(({ year, label, allLabel, color }) => {
             const isExpanded = expandedYears.includes(year);

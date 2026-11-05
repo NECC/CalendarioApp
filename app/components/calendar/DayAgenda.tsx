@@ -9,8 +9,8 @@ interface DayAgendaProps {
   events: calendarEvent[];
   starredIds: Set<string>;
   onToggleStar: (id: string) => void;
-  /** Se os avisos estão desligados, mostramos uma dica ao dar estrela. */
-  notificationsOn: boolean;
+  /** Mensagem a mostrar quando há estrelas mas os avisos não estão ativos. */
+  notificationHint: string | null;
 }
 
 function StarButton({
@@ -27,7 +27,7 @@ function StarButton({
       onClick={onToggle}
       aria-pressed={active}
       aria-label={active ? `Tirar estrela de ${event.title}` : `Dar estrela a ${event.title}`}
-      title={active ? "Tirar estrela" : "Dar estrela (recebes avisos nos 5 dias antes)"}
+      title={active ? "Tirar estrela" : "Dar estrela (recebes um aviso por dia na semana antes)"}
       className={`shrink-0 -mr-1 p-1 rounded-full transition active:scale-75 ${
         active ? "text-amber-400" : "opacity-60 hover:opacity-100"
       }`}
@@ -97,9 +97,9 @@ export function DayAgenda({
   events,
   starredIds,
   onToggleStar,
-  notificationsOn,
+  notificationHint,
 }: DayAgendaProps) {
-  const showHint = !notificationsOn && events.some((e) => starredIds.has(e.id));
+  const showHint = Boolean(notificationHint) && events.some((e) => starredIds.has(e.id));
 
   // Formata a data e remove a palavra "de" (ex: "5 novembro 2026")
   const fullDate = selectedDate
@@ -124,7 +124,7 @@ export function DayAgenda({
 
       {showHint && (
         <p className="shrink-0 px-1 mb-2 text-xs text-muted-foreground">
-          ⭐ Para seres avisado deste teste, liga os <b>Avisos dos testes</b> nos filtros.
+          ⭐ {notificationHint}
         </p>
       )}
 

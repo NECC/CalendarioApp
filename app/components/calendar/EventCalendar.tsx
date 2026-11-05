@@ -100,6 +100,33 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
   );
   const push = usePushNotifications(pushPrefs);
 
+  // Dar estrela = "quero ser avisado deste teste". Se os avisos ainda não
+  // estão ligados, pedimos logo a permissão. Tem de ser aqui, dentro do
+  // clique, porque o browser (sobretudo o iPhone) só deixa pedir
+  // permissão como resposta direta a um toque.
+  const { status: pushStatus, enable: enablePush } = push;
+  const handleToggleStar = useCallback(
+    (id: string) => {
+      const adding = !starredSet.has(id);
+      toggleStar(id);
+      if (adding && pushStatus === "off") enablePush();
+    },
+    [starredSet, toggleStar, pushStatus, enablePush],
+  );
+
+  // Dica na agenda quando há estrelas mas os avisos não podem chegar.
+  const notificationHint = (() => {
+    if (push.status === "on" || push.status === "loading") return null;
+    if (push.message) return push.message;
+    if (push.status === "ios-not-installed")
+      return "Para receberes avisos no iPhone, instala a app: Partilhar → Adicionar ao ecrã principal.";
+    if (push.status === "denied")
+      return "As notificações estão bloqueadas. Ativa-as nas definições do telemóvel/browser para este site.";
+    if (push.status === "unsupported")
+      return "Este browser não suporta notificações.";
+    return "Liga os avisos para receberes notificações dos testes com estrela.";
+  })();
+
   const changeMonth = useCallback((delta: number) => {
     setCalendar((prev) => {
       if (!prev) return prev;
@@ -255,8 +282,8 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
             selectedDate={agenda.date}
             events={agenda.events}
             starredIds={starredSet}
-            onToggleStar={toggleStar}
-            notificationsOn={push.status === "on"}
+            onToggleStar={handleToggleStar}
+            notificationHint={notificationHint}
           />
         )}
       </div>
