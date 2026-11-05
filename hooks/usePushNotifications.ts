@@ -22,9 +22,11 @@ export type PushStatus =
   | "off" // suportado, mas não ativo
   | "on"; // ativo
 
-interface Prefs {
+export interface PushPrefs {
   years: number[];
   subjects: string[];
+  /** IDs dos testes com estrela ⭐ */
+  starred: string[];
 }
 
 // A chave pública VAPID vem em "base64url", mas o browser quer bytes.
@@ -47,7 +49,7 @@ function isStandalone() {
   );
 }
 
-export function usePushNotifications(prefs: Prefs) {
+export function usePushNotifications(prefs: PushPrefs) {
   const [status, setStatus] = useState<PushStatus>("loading");
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   const [busy, setBusy] = useState(false);
@@ -81,8 +83,9 @@ export function usePushNotifications(prefs: Prefs) {
     };
   }, []);
 
-  // 2) Sempre que os filtros mudam e as notificações estão ativas,
-  //    avisamos o servidor (com um pequeno atraso para juntar vários cliques).
+  // 2) Sempre que os filtros mudam e as notificações estão ativas
+  //    (ou as estrelas), avisamos o servidor — com um pequeno atraso para
+  //    juntar vários cliques seguidos num só pedido.
   const prefsKey = JSON.stringify(prefs);
   useEffect(() => {
     if (!subscription) return;
@@ -158,3 +161,5 @@ export function usePushNotifications(prefs: Prefs) {
 
   return { status, busy, message, enable, disable, sendTest };
 }
+
+export type PushControls = ReturnType<typeof usePushNotifications>;

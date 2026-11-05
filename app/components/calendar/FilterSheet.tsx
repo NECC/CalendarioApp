@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CATEGORY_COLORS } from "../../../lib/category-colors";
 import { SUBJECTS_DATA } from "../../../lib/subjects";
 import { NotificationSettings } from "./NotificationSettings";
+import type { PushControls } from "@/hooks/usePushNotifications";
 
 const YEARS = [
   {
@@ -42,6 +43,7 @@ interface FilterSheetProps {
   onToggleSubject: (sigla: string) => void;
   onClear: () => void;
   onClose: () => void;
+  push: PushControls;
 }
 
 const toggleIn = <T,>(list: T[], item: T) =>
@@ -127,6 +129,7 @@ export function FilterSheet({
   onToggleSubject,
   onClear,
   onClose,
+  push,
 }: FilterSheetProps) {
   // Abre já expandidos os anos que têm seleção. Cada ano abre/fecha
   // de forma independente (não interfere com o que está selecionado).
@@ -244,7 +247,10 @@ export function FilterSheet({
         </div>
 
         <div className="p-6 pt-4 overflow-y-auto overscroll-contain flex flex-col">
-          <NotificationSettings years={years} subjects={subjects} />
+          <NotificationSettings
+            push={push}
+            hasFilters={years.length > 0 || subjects.length > 0}
+          />
 
           {YEARS.map(({ year, label, allLabel, color }) => {
             const isExpanded = expandedYears.includes(year);

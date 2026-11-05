@@ -19,6 +19,8 @@ export interface Preferences {
   years: number[];
   /** Siglas das UCs (ver lib/subjects.ts). */
   subjects: string[];
+  /** IDs dos testes com estrela ⭐ (aviso nos 5 dias antes e no próprio dia). */
+  starred: string[];
 }
 
 export interface StoredSubscription extends Preferences {
