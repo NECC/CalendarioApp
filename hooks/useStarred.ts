@@ -1,7 +1,6 @@
 "use client";
-// Testes marcados com estrela ⭐ — guardados no dispositivo (localStorage).
-// Também são enviados ao servidor (ver usePushNotifications) para o cron
-// saber de que testes avisar nos 5 dias antes e no próprio dia.
+// Testes com estrela, guardados no dispositivo e sincronizados com o servidor
+// por usePushNotifications.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -17,7 +16,6 @@ function load(): string[] {
 }
 
 export function useStarred() {
-  // Só é usado em componentes que montam no cliente, por isso podemos ler já.
   const [starred, setStarred] = useState<string[]>(load);
 
   useEffect(() => {
@@ -30,7 +28,6 @@ export function useStarred() {
     setStarred((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }, []);
 
-  // Set para procurar rápido ("este teste tem estrela?")
   const starredSet = useMemo(() => new Set(starred), [starred]);
 
   return { starred, starredSet, toggleStar };

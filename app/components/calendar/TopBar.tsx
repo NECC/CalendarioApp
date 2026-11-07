@@ -3,8 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 
-// Coloca a tua imagem em public/ (ex.: public/logo.png) e ajusta o caminho.
-// Se o ficheiro não existir, volta a aparecer o ícone de calendário.
 const MONTH_ICON_SRC = "/icons/necc-icon.svg";
 
 interface TopBarProps {

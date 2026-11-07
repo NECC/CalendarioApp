@@ -1,17 +1,9 @@
 "use client";
-// Convida a pessoa a instalar a app no ecrã principal.
-//
-// Há dois mundos diferentes:
-//  - Android / Chrome / Edge: o browser dispara o evento "beforeinstallprompt".
-//    Guardamo-lo e, quando a pessoa clica no nosso botão, chamamos prompt()
-//    → aparece a janela nativa de instalação.
-//  - iPhone (Safari): NÃO existe esse evento. A única forma é a pessoa ir a
-//    Partilhar → "Adicionar ao ecrã principal". Por isso mostramos instruções.
-//    (E no iPhone as notificações push SÓ funcionam com a app instalada!)
+// Android e Chrome/Edge disparam "beforeinstallprompt". No iPhone esse evento
+// não existe, por isso mostramos as instruções de instalação.
 
 import { useEffect, useState } from "react";
 
-// Este evento ainda não vem nos tipos do TypeScript, por isso descrevemo-lo nós.
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -25,10 +17,8 @@ export function InstallPrompt() {
   const [hidden, setHidden] = useState(true);
 
   useEffect(() => {
-    // Já está instalada? (aberta como app, sem barra do browser) → não mostramos nada.
     const standalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      // Safari antigo usa esta propriedade própria
       (navigator as Navigator & { standalone?: boolean }).standalone === true;
 
     let dismissed = false;
@@ -37,13 +27,13 @@ export function InstallPrompt() {
     } catch {}
     if (standalone || dismissed) return;
 
-    // Deteta iPhone/iPad. (iPad recente diz que é "Macintosh", mas tem ecrã tátil.)
+    // O iPad recente identifica-se como "Macintosh", mas tem ecrã tátil.
     const ua = navigator.userAgent;
     const isIOS =
       /iPhone|iPad|iPod/.test(ua) || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
 
     const onBeforeInstall = (e: Event) => {
-      e.preventDefault(); // impede o mini-aviso automático do Chrome
+      e.preventDefault();
       setDeferred(e as BeforeInstallPromptEvent);
       setHidden(false);
     };
@@ -52,7 +42,6 @@ export function InstallPrompt() {
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     window.addEventListener("appinstalled", onInstalled);
 
-    // setTimeout para não mudar o estado durante o primeiro render (evita avisos do React).
     const t = isIOS ? setTimeout(() => { setShowIOS(true); setHidden(false); }, 0) : undefined;
 
     return () => {
@@ -65,15 +54,15 @@ export function InstallPrompt() {
   function fechar() {
     setHidden(true);
     try {
-      localStorage.setItem(DISMISS_KEY, "1"); // não voltar a chatear
+      localStorage.setItem(DISMISS_KEY, "1");
     } catch {}
   }
 
   async function instalar() {
     if (!deferred) return;
-    await deferred.prompt(); // abre a janela nativa
-    await deferred.userChoice; // espera pela resposta (aceitou / recusou)
-    setDeferred(null); // o evento só pode ser usado uma vez
+    await deferred.prompt();
+    await deferred.userChoice;
+    setDeferred(null);
     setHidden(true);
   }
 
@@ -87,7 +76,7 @@ export function InstallPrompt() {
         <p className="font-semibold">Instala o NECC Calendário</p>
         {showIOS ? (
           <p className="text-xs opacity-70">
-            Toca em <b>Partilhar</b> <span aria-hidden>⎋</span> e depois em{" "}
+            Toca em <b>Partilhar</b> e depois em{" "}
             <b>Adicionar ao ecrã principal</b> para receberes avisos dos testes.
           </p>
         ) : (

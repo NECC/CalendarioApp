@@ -67,13 +67,10 @@ function initialCalendar(): CalendarState | null {
 }
 
 export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
-  // Este componente só monta no cliente (a página mostra o esqueleto até os
-  // dados chegarem), por isso podemos usar new Date()/window logo no início.
+  // Só monta no cliente: a página mostra o esqueleto até os dados chegarem.
   const [calendar, setCalendar] = useState<CalendarState | null>(initialCalendar);
 
-  // Filtros combináveis: anos inteiros + disciplinas soltas, de qualquer ano.
-  // Ficam guardados no dispositivo (localStorage), para a pessoa não ter de
-  // os escolher sempre — e porque são também os filtros das notificações.
+  // Anos inteiros e disciplinas soltas, combináveis e guardados no dispositivo.
   const [selectedYears, setSelectedYears] = useState<number[]>(
     () => loadSavedFilters().years,
   );
@@ -91,8 +88,7 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
     } catch {}
   }, [selectedYears, selectedSubjects]);
 
-  // Estrelas ⭐ + notificações. O hook das notificações vive aqui (e não no
-  // ecrã de filtros) para que dar/tirar estrela sincronize logo com o servidor.
+  // O hook vive aqui, e não nos filtros, para as estrelas sincronizarem logo.
   const { starred, starredSet, toggleStar } = useStarred();
   const pushPrefs = useMemo(
     () => ({ years: selectedYears, subjects: selectedSubjects, starred }),
@@ -100,31 +96,28 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
   );
   const push = usePushNotifications(pushPrefs);
 
-  // Dar estrela = "quero ser avisado deste teste". Se os avisos ainda não
-  // estão ligados, pedimos logo a permissão. Tem de ser aqui, dentro do
-  // clique, porque o browser (sobretudo o iPhone) só deixa pedir
-  // permissão como resposta direta a um toque.
-  const { status: pushStatus, enable: enablePush } = push;
+  // A permissão só pode ser pedida em resposta direta a um toque.
+  const { enableFromStar } = push;
   const handleToggleStar = useCallback(
     (id: string) => {
       const adding = !starredSet.has(id);
       toggleStar(id);
-      if (adding && pushStatus === "off") enablePush();
+      if (adding) enableFromStar();
     },
-    [starredSet, toggleStar, pushStatus, enablePush],
+    [starredSet, toggleStar, enableFromStar],
   );
 
-  // Dica na agenda quando há estrelas mas os avisos não podem chegar.
   const notificationHint = (() => {
+    if (push.syncError) return push.syncError;
     if (push.status === "on" || push.status === "loading") return null;
     if (push.message) return push.message;
     if (push.status === "ios-not-installed")
-      return "Para receberes avisos no iPhone, instala a app: Partilhar → Adicionar ao ecrã principal.";
+      return "Para receberes avisos no iPhone, instala a app: toca em Partilhar e depois em Adicionar ao ecrã principal.";
     if (push.status === "denied")
       return "As notificações estão bloqueadas. Ativa-as nas definições do telemóvel/browser para este site.";
     if (push.status === "unsupported")
       return "Este browser não suporta notificações.";
-    return "Liga os avisos para receberes notificações dos testes com estrela.";
+    return "Os avisos estão desligados. Podes ligá-los nos filtros.";
   })();
 
   const changeMonth = useCallback((delta: number) => {
@@ -202,7 +195,6 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
     [initialEvents, selectedYears, selectedSubjects],
   );
 
-  // Eventos do dia selecionado (ordenados por hora). Sem eventos => sem agenda.
   const selectedDay = calendar?.selected;
   const dayEvents = useMemo(() => {
     if (!selectedDay) return [];
@@ -215,10 +207,7 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
       );
   }, [filteredEvents, selectedDay]);
 
-  // Guarda o último dia com eventos: assim, ao fechar a agenda, o conteúdo
-  // não desaparece de repente enquanto a altura anima até 0.
-  // (Padrão do React "ajustar estado durante o render": só atualiza quando
-  // a lista do dia muda, por isso não entra em ciclo.)
+  // Mantém o conteúdo visível enquanto a agenda anima ao fechar.
   const [lastAgenda, setLastAgenda] = useState<{
     date: Date;
     events: calendarEvent[];
@@ -247,7 +236,6 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
         />
       </div>
 
-      {/* Calendário: cresce/encolhe com transição quando a agenda abre/fecha */}
       <div
         style={{ flexGrow: 3 }}
         className="basis-0 min-h-0 flex flex-col bg-card rounded-3xl border border-border shadow-sm overflow-hidden select-none touch-pan-y"
@@ -267,7 +255,6 @@ export function EventCalendar({ initialEvents = [] }: EventCalendarProps) {
         </div>
       </div>
 
-      {/* Agenda: está sempre montada; só anima flex-grow, altura mínima e margem */}
       <div
         style={{ flexGrow: hasDayEvents ? 1 : 0 }}
         aria-hidden={!hasDayEvents}

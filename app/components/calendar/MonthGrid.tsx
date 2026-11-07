@@ -10,7 +10,7 @@ interface MonthGridProps {
   events: calendarEvent[];
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
-  /** IDs dos eventos com estrela (mostra uma ⭐ pequena nesse dia). */
+  /** IDs dos eventos com estrela (marcados no dia com uma estrela pequena). */
   starredIds?: Set<string>;
 }
 
@@ -29,9 +29,6 @@ export const MonthGrid = memo(function MonthGrid({
   const year = date.getFullYear();
   const month = date.getMonth();
 
-  // Só as semanas de que o mês precisa (4, 5 ou 6). As linhas repartem a
-  // altura toda do cartão, por isso o calendário fica sempre proporcional
-  // — sem linhas meio vazias no fim.
   const { cells, weeks } = useMemo(() => {
     const firstWeekday = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -56,7 +53,6 @@ export const MonthGrid = memo(function MonthGrid({
     return map;
   }, [events]);
 
-  // Dias que têm pelo menos um evento com estrela
   const starredDays = useMemo(() => {
     const set = new Set<string>();
     if (!starredIds?.size) return set;
@@ -81,7 +77,6 @@ export const MonthGrid = memo(function MonthGrid({
         ))}
       </div>
 
-      {/* Uma linha por semana do mês, a repartir a altura toda do cartão */}
       <div
         className="flex-1 min-h-0 grid grid-cols-7 gap-x-1"
         style={{ gridTemplateRows: `repeat(${weeks}, minmax(0, 1fr))` }}

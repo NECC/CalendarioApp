@@ -4,57 +4,80 @@ PWA com o calendário de testes, entregas e eventos de LCC, com avisos por notif
 
 ## Funcionalidades
 
-- **Instalável** no ecrã principal (Android, iPhone, PC) — `public/manifest.json` + `app/components/InstallPrompt.tsx`
-- **Funciona offline** — o service worker (`public/sw.js`) guarda a última versão das datas
-- **Estrelas ⭐ + notificações push**: ao dar estrela a um teste, a app pede logo permissão; a partir de uma semana antes recebes um aviso **todos os dias às 10h** (hora de Lisboa) com o tempo que falta, até ao próprio dia
+- Instalável no ecrã principal (Android, iPhone e computador)
+- Funciona sem ligação, com as últimas datas guardadas
+- Avisos dos testes com estrela: um por dia, às 10h em Lisboa, desde uma semana antes até ao próprio dia. Dar uma estrela liga os avisos; só é preciso ir aos filtros para os desligar
 
 ## Desenvolvimento local
 
 ```bash
 npm install
-cp .env.example .env.local   # e preenche (ver abaixo)
+cp .env.example .env.local
 npm run dev
 ```
 
-Sem as variáveis do Redis, as subscrições ficam em memória (perdem-se ao reiniciar) — chega para testar.
+Sem as variáveis do Redis, as subscrições ficam em memória e perdem-se ao reiniciar.
 
-Disparar o cron à mão:
+Para disparar o cron à mão (`?force=1` ignora a hora e os avisos já entregues):
 
 ```bash
-# ?force=1 ignora a verificação "são 10h em Lisboa?"
 curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/notify?force=1"
 ```
 
 ## Deploy na Vercel
 
-1. **Importar o projeto**: vercel.com → *Add New → Project* → escolher o repositório do GitHub.
-2. **Base de dados**: no projeto, *Storage* (ou *Marketplace*) → **Upstash → Redis** → criar (plano gratuito) e ligar ao projeto. Isto cria sozinho as variáveis `KV_REST_API_URL` e `KV_REST_API_TOKEN`.
-3. **Variáveis de ambiente**: *Settings → Environment Variables*, adicionar (os valores estão no teu `.env.local`):
+1. Importar o repositório em vercel.com.
+2. Em Storage ou Marketplace, criar uma base de dados Upstash Redis e ligá-la ao projeto. Isto cria `KV_REST_API_URL` e `KV_REST_API_TOKEN`.
+3. Em Settings, Environment Variables, adicionar para o ambiente Production:
    - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
    - `VAPID_PRIVATE_KEY`
-   - `VAPID_SUBJECT` (ex.: `mailto:email-do-necc@...`)
+   - `VAPID_SUBJECT`, com um contacto real
    - `CRON_SECRET`
-4. **Redeploy** (as variáveis só entram num deploy novo).
-5. Os crons em `vercel.json` correm às **09:00 e 10:00 UTC**; o código só envia na chamada em que são **10h em Lisboa** (assim funciona na hora de inverno e de verão). No plano gratuito a Vercel pode atrasar até ~1h dentro dessa hora.
-6. Para verificar a configuração: abre `/api/push/health` — tem de dar `"ok": true`.
+4. Fazer redeploy, porque as variáveis só entram num deploy novo.
+5. Abrir `/api/push/health` e confirmar `"ok": true`.
 
-⚠️ Usa sempre as **mesmas chaves VAPID**: se as mudares, todas as subscrições existentes deixam de funcionar.
+Mudar as chaves VAPID invalida as subscrições existentes. A app renova a subscrição da pessoa da próxima vez que for aberta.
+
+## Horário dos avisos
+
+Os crons correm às 09:00, 10:00 e 11:00 UTC. O código envia a partir das 10h em Lisboa, o que funciona na hora de inverno e de verão. As chamadas seguintes só tratam dos envios que falharam ou de crons perdidos, sem repetir o aviso a quem já o recebeu.
+
+No plano Hobby, a Vercel pode executar um cron em qualquer minuto da hora marcada, por isso o aviso pode chegar entre as 10:00 e as 10:59.
+
+## Diagnóstico
+
+Quando um aviso não chega, abrir `/api/push/health` e ver `lastCron`:
+
+| O que aparece | Significado |
+|---|---|
+| `lastCron` é `null` ou de um dia anterior | O cron não correu. Ver Settings, Cron Jobs, e os logs de `/api/cron/notify` |
+| `subscriptions: 0` | O servidor não tem dispositivos registados |
+| `withStarred: 0` | Os dispositivos não têm estrelas registadas no servidor |
+| `withJobs: 0` | Nenhum teste com estrela está nos próximos 7 dias |
+| `errors` maior que 0 | O serviço de push recusou. `errorStatuses` indica o código; 401 e 403 apontam para as chaves VAPID ou para `VAPID_SUBJECT` |
+| `sent` maior que 0 | O serviço de push aceitou o aviso. Se não apareceu, o problema está no dispositivo |
+
+Para testar o envio automático em produção sem esperar pelas 10h (envia os avisos de hoje a todos os dispositivos):
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" "https://URL-DA-APP/api/cron/notify?force=1"
+```
 
 ## Onde está o quê
 
 | Ficheiro | O que faz |
 |---|---|
-| `lib/calendar-data.ts` | **Lista de testes** — editar aqui para adicionar/mudar datas |
-| `lib/subjects.ts` | Lista de UCs (usada nos filtros e nas notificações) |
-| `public/sw.js` | Service worker: offline + mostrar notificações |
-| `app/actions.ts` | Server Actions: subscrever/desubscrever/teste |
-| `lib/push-store.ts` | Guarda as subscrições (Redis ou memória) |
-| `lib/notify.ts` | Decide quem recebe o quê (corre no cron) |
-| `app/api/cron/notify/route.ts` | Endpoint chamado pela Vercel todos os dias |
+| `lib/calendar-data.ts` | Lista de testes; editar aqui para mudar datas |
+| `lib/subjects.ts` | Lista de UCs |
+| `public/sw.js` | Service worker: cache e notificações |
+| `app/actions.ts` | Subscrever e desubscrever |
+| `lib/push-store.ts` | Subscrições, entregas do dia e última execução do cron |
+| `lib/notify.ts` | Decide que avisos enviar |
+| `app/api/cron/notify/[[...slot]]/route.ts` | Endpoint chamado pelos crons |
+| `app/api/push/health/route.ts` | Diagnóstico |
 | `hooks/usePushNotifications.ts` | Lógica de push no browser |
-| `hooks/useStarred.ts` | Testes com estrela (guardados no dispositivo) |
-| `app/components/calendar/NotificationSettings.tsx` | Interruptor "Avisos dos testes" nos filtros |
+| `hooks/useStarred.ts` | Testes com estrela |
 
-## Notas sobre iPhone
+## iPhone
 
-As notificações só funcionam com **iOS 16.4+** e com a app **instalada no ecrã principal** (Partilhar → Adicionar ao ecrã principal) e aberta a partir do ícone.
+As notificações exigem iOS 16.4 ou mais recente e a app instalada no ecrã principal, aberta a partir do ícone.

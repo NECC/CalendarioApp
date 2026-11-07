@@ -1,12 +1,5 @@
 "use server";
-// =============================================================
-// Server Actions das notificações.
-// "use server" = estas funções correm SÓ no servidor, mas o browser pode
-// chamá-las como funções normais (o Next faz o pedido HTTP por trás).
-//
-// ⚠️ Qualquer pessoa na internet consegue chamar estas funções, por isso
-// validamos SEMPRE o que chega (nunca confiar no cliente).
-// =============================================================
+// Estas funções são endpoints públicos: valida-se sempre o que chega do cliente.
 import type { PushSubscription } from "web-push";
 import { SUBJECTS_DATA } from "@/lib/subjects";
 import { getCalendarEvents } from "@/lib/calendar-data";
@@ -16,7 +9,6 @@ import {
   saveSubscription,
   type Preferences,
 } from "@/lib/push-store";
-import { sendPush } from "@/lib/push-send";
 
 const VALID_YEARS = new Set([0, 1, 2, 3]);
 const VALID_SUBJECTS = new Set(SUBJECTS_DATA.map((s) => s.sigla));
@@ -30,7 +22,6 @@ function cleanPreferences(p: unknown): Preferences {
   const subjects = Array.isArray(obj.subjects)
     ? [...new Set(obj.subjects.filter((s) => VALID_SUBJECTS.has(s)))]
     : [];
-  // Só aceitamos IDs de testes que existem mesmo (e no máximo 200).
   const starred = Array.isArray(obj.starred)
     ? [...new Set(obj.starred.filter((id) => VALID_EVENT_IDS.has(id)))].slice(0, 200)
     : [];
@@ -49,11 +40,9 @@ function cleanSubscription(s: unknown): PushSubscription | null {
   ) {
     return null;
   }
-  // Guardamos só os campos que interessam (ignora lixo extra).
   return { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } };
 }
 
-/** A pessoa ativou as notificações: guarda a "morada" + os filtros dela. */
 export async function subscribeUser(sub: unknown, prefs: unknown) {
   const subscription = cleanSubscription(sub);
   if (!subscription) return { success: false as const, error: "Subscrição inválida" };
@@ -67,7 +56,6 @@ export async function subscribeUser(sub: unknown, prefs: unknown) {
   return { success: true as const };
 }
 
-/** A pessoa mudou os filtros: atualiza o que quer receber. */
 export async function updatePreferences(endpoint: string, prefs: unknown) {
   const existing = typeof endpoint === "string" ? await getSubscription(endpoint) : null;
   if (!existing) return { success: false as const, error: "Não subscrito" };
@@ -75,34 +63,12 @@ export async function updatePreferences(endpoint: string, prefs: unknown) {
   return { success: true as const };
 }
 
-/** A pessoa desativou as notificações. */
 export async function unsubscribeUser(endpoint: string) {
   if (typeof endpoint === "string") await deleteSubscription(endpoint);
   return { success: true as const };
 }
 
-/** Botão "Enviar teste": manda uma notificação só para este dispositivo. */
-export async function sendTestNotification(endpoint: string) {
-  const existing = typeof endpoint === "string" ? await getSubscription(endpoint) : null;
-  if (!existing) return { success: false as const, error: "Não subscrito — volta a ativar" };
-
-  const r = await sendPush(existing.subscription, {
-    title: "NECC Calendário 🔔",
-    body: "As notificações estão a funcionar! Dá ⭐ aos teus testes para receberes um aviso por dia, às 10h, na semana antes.",
-    url: "/",
-    tag: "teste",
-  });
-  return r === "ok"
-    ? { success: true as const }
-    : { success: false as const, error: "Falhou o envio" };
-}
-
-/**
- * Chave pública VAPID lida no servidor, em tempo real.
- * (A versão NEXT_PUBLIC_ é "colada" no código só durante o build — se a
- * variável foi adicionada na Vercel depois do deploy, o browser não a tem.
- * Assim funciona na mesma.)
- */
+/** Chave pública em uso no servidor, para o browser detetar subscrições feitas com outra chave. */
 export async function getVapidPublicKey() {
   return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null;
 }
