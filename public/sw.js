@@ -1,4 +1,7 @@
-// Mudar este nome apaga a cache antiga no evento activate.
+// Service worker: runs in the background, even with the app closed.
+// Caches the dates for offline use and shows notifications.
+
+// Changing this name deletes the old cache on activate.
 const CACHE = "necc-v1";
 
 self.addEventListener("install", () => {
@@ -16,7 +19,7 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Primeiro a rede, com a cache como recurso quando não há ligação.
+// Network first, falling back to the cache when offline.
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
@@ -44,6 +47,7 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
+// A reminder arrived from the server: show the notification.
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -53,7 +57,7 @@ self.addEventListener("push", (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(data.title || "NECC Calendário", {
+    self.registration.showNotification(data.title || "NECC Calendar", {
       body: data.body || "",
       icon: "/icons/necc-icon-192.png",
       badge: "/icons/necc-icon-192-monochrome.png",
@@ -64,6 +68,7 @@ self.addEventListener("push", (event) => {
   );
 });
 
+// Tapping the notification opens the app on the day of the test.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = event.notification.data?.url || "/";
@@ -73,7 +78,7 @@ self.addEventListener("notificationclick", (event) => {
       const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       for (const win of windows) {
         if ("focus" in win) {
-          // navigate() falha em janelas não controladas por este service worker.
+          // navigate() fails in windows this service worker does not control.
           try {
             await win.navigate(url);
           } catch {}

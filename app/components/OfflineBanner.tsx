@@ -1,4 +1,5 @@
 "use client";
+// Banner shown when there is no internet. Dates come from the service worker cache.
 import { useSyncExternalStore } from "react";
 
 function subscribe(callback: () => void) {
@@ -25,7 +26,7 @@ export function OfflineBanner() {
       className="fixed top-0 inset-x-0 z-50 bg-foreground text-background text-xs text-center py-1.5 px-4"
       style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.375rem)" }}
     >
-      Sem ligação. A mostrar as últimas datas guardadas.
+      No connection. Showing the last saved dates.
     </div>
   );
 }

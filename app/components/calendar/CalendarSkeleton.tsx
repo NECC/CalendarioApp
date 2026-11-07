@@ -1,10 +1,10 @@
-// Reproduz o layout do EventCalendar (barra, calendário 3/4, agenda 1/4)
+// Placeholder for the main screen, shown while the data loads.
 export function CalendarSkeleton() {
   return (
     <div
       className="flex flex-col w-full h-dvh bg-background px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] gap-4 max-w-lg mx-auto animate-pulse overflow-hidden"
       aria-busy="true"
-      aria-label="A carregar calendário"
+      aria-label="Loading calendar"
     >
       <div className="flex items-center justify-between w-full px-1 shrink-0">
         <div className="h-10 w-48 rounded-full bg-muted/30" />

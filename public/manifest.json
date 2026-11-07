@@ -1,9 +1,9 @@
 {
   "id": "/?source=pwa",
-  "name": "NECC - Calendário",
-  "short_name": "NECCalendário",
-  "description": "Calendário de exames e eventos de LCC.",
-  "lang": "pt-PT",
+  "name": "NECC Calendar",
+  "short_name": "NECCalendar",
+  "description": "Calendar of LCC tests, submissions and events.",
+  "lang": "en",
   "dir": "auto",
   "start_url": "/?source=pwa",
   "scope": "/",

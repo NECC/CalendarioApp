@@ -1,35 +1,35 @@
 "use client";
-
+// Swiping sideways to change month.
 import { useCallback, useEffect, useRef } from "react";
 
 interface UseSwipeOptions {
-  /** Chamado ao fazer swipe para a esquerda (ex.: mês seguinte). */
+  /** Called when swiping left (for example, next month). */
   onSwipeLeft: () => void;
-  /** Chamado ao fazer swipe para a direita (ex.: mês anterior). */
+  /** Called when swiping right (for example, previous month). */
   onSwipeRight: () => void;
-  /** Distância mínima (px) para confirmar o swipe. */
+  /** Minimum distance (px) to confirm the swipe. */
   threshold?: number;
 }
 
 type Axis = "x" | "y" | null;
 
-const LOCK_DISTANCE = 8; // px de movimento até decidir se é horizontal ou vertical
+const LOCK_DISTANCE = 8; // px of movement before deciding if it is horizontal or vertical
 const OUT_MS = 150;
 const IN_MS = 220;
 
 /**
- * Swipe horizontal que:
- *  - ignora taps (não há "swipes fantasma");
- *  - só reage se o gesto for predominantemente horizontal (não rouba o scroll vertical);
- *  - faz o elemento acompanhar o dedo e anima a troca de conteúdo.
+ * Horizontal swipe that:
+ *  - ignores taps;
+ *  - only reacts to mostly horizontal gestures, so vertical scrolling still works;
+ *  - makes the element follow the finger and animates the content change.
  *
- * O transform é aplicado diretamente no elemento (sem setState),
- * por isso não há re-renders durante o arrasto.
+ * The transform is applied directly to the element, without setState,
+ * so nothing re-renders during the drag.
  *
- * Uso:
+ * Usage:
  *   const { ref, handlers } = useSwipe<HTMLDivElement>({ ... });
  *   <div className="overflow-hidden touch-pan-y" {...handlers}>
- *     <div ref={ref}>conteúdo</div>
+ *     <div ref={ref}>content</div>
  *   </div>
  */
 export function useSwipe<T extends HTMLElement = HTMLDivElement>({
@@ -96,10 +96,10 @@ export function useSwipe<T extends HTMLElement = HTMLDivElement>({
       g.axis = Math.abs(dx) > Math.abs(dy) * 1.2 ? "x" : "y";
     }
 
-    if (g.axis !== "x") return; // scroll vertical: deixar o browser tratar
+    if (g.axis !== "x") return; // vertical scroll: leave it to the browser
 
     g.dx = dx;
-    // resistência: o conteúdo segue o dedo mas "pesa"
+    // resistance: the content follows the finger, but more slowly
     el.style.transform = `translateX(${dx * 0.6}px)`;
     el.style.opacity = String(1 - Math.min(Math.abs(dx) / 500, 0.35));
   }, []);
@@ -111,14 +111,14 @@ export function useSwipe<T extends HTMLElement = HTMLDivElement>({
       if (!g.tracking || !el) return;
       g.tracking = false;
 
-      if (g.axis !== "x") return; // foi tap ou scroll vertical
+      if (g.axis !== "x") return; // it was a tap or a vertical scroll
 
       if (cancelled || Math.abs(g.dx) < threshold) {
         snapBack(el);
         return;
       }
 
-      const goNext = g.dx < 0; // arrastar para a esquerda => mês seguinte
+      const goNext = g.dx < 0; // dragging left means next month
       const trigger = goNext
         ? callbacks.current.onSwipeLeft
         : callbacks.current.onSwipeRight;
@@ -135,18 +135,18 @@ export function useSwipe<T extends HTMLElement = HTMLDivElement>({
       animating.current = true;
       const dir = goNext ? 1 : -1;
 
-      // 1) sai para o lado do dedo
+      // 1) slide out in the direction of the finger
       el.style.transition = `transform ${OUT_MS}ms ease-in, opacity ${OUT_MS}ms ease-in`;
       el.style.transform = `translateX(${-dir * 100}%)`;
       el.style.opacity = "0";
 
       later(() => {
-        // 2) troca o mês e coloca o novo conteúdo do lado oposto
+        // 2) change the month and place the new content on the opposite side
         trigger();
         el.style.transition = "none";
         el.style.transform = `translateX(${dir * 40}%)`;
 
-        // 3) entra para o centro (2 frames para o React pintar o novo mês)
+        // 3) slide to the centre (2 frames so React can paint the new month)
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
             el.style.transition = `transform ${IN_MS}ms ease-out, opacity ${IN_MS}ms ease-out`;

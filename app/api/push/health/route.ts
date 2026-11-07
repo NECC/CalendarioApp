@@ -1,9 +1,10 @@
-// Diagnóstico das notificações. Nunca devolve o valor das chaves.
+// Notification diagnostics: open /api/push/health in a browser.
+// Shows what is configured and the last cron result. Never shows the keys.
 import { createECDH } from "node:crypto";
 import { NextResponse, connection } from "next/server";
-import { getLastCronRun } from "@/lib/push-store";
+import { getLastCronRun } from "@/lib/push/store";
 
-/** A chave pública corresponde à privada? Se não, o serviço de push recusa os envios. */
+/** Does the public key match the private one? If not, the push service refuses sends. */
 function vapidKeysMatch(): boolean {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;

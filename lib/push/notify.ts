@@ -1,61 +1,62 @@
-// Avisos dos testes com estrela: um por dia, às 10h em Lisboa, desde 7 dias
-// antes até ao próprio dia.
+// Decides which reminders to send and sends them. Runs once a day, from the cron.
+// Each person gets one reminder for each starred test that is 7 days away or
+// less, up to the day itself.
 import "server-only";
-import { getCalendarEvents } from "./calendar-data";
-import { claimDelivery, getAllSubscriptions, releaseDelivery } from "./push-store";
-import { sendPush, type PushPayload } from "./push-send";
-import type { calendarEvent } from "@/types/calendar";
+import { getCalendarEvents } from "@/lib/calendar-data";
+import { claimDelivery, getAllSubscriptions, releaseDelivery } from "@/lib/push/store";
+import { sendPush, type PushPayload } from "@/lib/push/send";
+import type { CalendarEvent } from "@/types/calendar";
 
 const TIME_ZONE = "Europe/Lisbon";
 export const DAYS_BEFORE = 7;
 export const SEND_HOUR = 10;
 
-/** Data "YYYY-MM-DD" em Lisboa, `offsetDays` dias a partir de agora. */
+/** Date "YYYY-MM-DD" in Lisbon, `offsetDays` days from now. */
 export function lisbonDate(offsetDays = 0, now = new Date()): string {
   const d = new Date(now.getTime() + offsetDays * 24 * 60 * 60 * 1000);
   return new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE }).format(d);
 }
 
-/** Hora atual (0-23) em Lisboa. */
+/** Current hour (0-23) in Lisbon. */
 export function lisbonHour(now = new Date()): number {
   return Number(
     new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, hour: "2-digit", hourCycle: "h23" }).format(now),
   );
 }
 
-const eventDay = (e: calendarEvent) => String(e.startTimestampnz).slice(0, 10);
+const eventDay = (e: CalendarEvent) => String(e.startTimestampnz).slice(0, 10);
 
-/** "2026-11-08" para "Domingo, 8 de novembro". */
+/** "2026-11-08" becomes "Sunday 8 November". */
 function formatDay(day: string): string {
   const [y, m, d] = day.split("-").map(Number);
-  const text = new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString("pt-PT", {
+  return new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString("en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long",
     timeZone: "UTC",
   });
-  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-function starPayload(event: calendarEvent, daysLeft: number): PushPayload {
+/** Reminder text: "Tomorrow: Cálculo - Test" and "Sunday 8 November". */
+function starPayload(event: CalendarEvent, daysLeft: number): PushPayload {
   const day = eventDay(event);
-  const prefix = daysLeft === 0 ? "Hoje" : daysLeft === 1 ? "Amanhã" : `Faltam ${daysLeft} dias`;
+  const prefix = daysLeft === 0 ? "Today" : daysLeft === 1 ? "Tomorrow" : `${daysLeft} days left`;
   return {
     title: `${prefix}: ${event.title}`,
     body: formatDay(day),
     url: `/?date=${day}`,
-    // Tag fixa por teste: o aviso de hoje substitui o de ontem.
+    // Fixed tag per test: today's reminder replaces yesterday's.
     tag: `star-${event.id}`,
   };
 }
 
-/** Avisos que uma pessoa recebe hoje. */
+/** Reminders a person gets today. */
 export function buildJobs(
-  allEvents: calendarEvent[],
-  prefs: { starred?: string[] },
+  allEvents: CalendarEvent[],
+  starred: string[] = [],
   now = new Date(),
 ): PushPayload[] {
-  const starredIds = new Set(prefs.starred ?? []);
+  const starredIds = new Set(starred);
   if (starredIds.size === 0) return [];
 
   const jobs: PushPayload[] = [];
@@ -68,6 +69,7 @@ export function buildJobs(
   return jobs;
 }
 
+/** Sends today's reminders to every device and returns a summary of what happened. */
 export async function runNotifications(now = new Date(), { force = false } = {}) {
   const allEvents = getCalendarEvents();
   const subs = await getAllSubscriptions();
@@ -92,7 +94,7 @@ export async function runNotifications(now = new Date(), { force = false } = {})
 
   await Promise.all(
     subs.map(async (sub) => {
-      const jobs = buildJobs(allEvents, sub, now);
+      const jobs = buildJobs(allEvents, sub.starred, now);
       if (jobs.length === 0) return;
       stats.withJobs++;
 
@@ -113,14 +115,14 @@ export async function runNotifications(now = new Date(), { force = false } = {})
             break;
           } else {
             failed = true;
-            addError(String(r.status ?? "sem-resposta"));
+            addError(String(r.status ?? "no-response"));
           }
         }
-        // Liberta o registo para a chamada seguinte voltar a tentar.
+        // The next cron retries this device.
         if (failed && !force) await releaseDelivery(date, endpoint);
       } catch (err) {
-        console.error("[notify] erro numa subscrição:", err);
-        addError("excecao");
+        console.error("[notify] subscription error:", err);
+        addError("exception");
         await releaseDelivery(date, endpoint).catch(() => {});
       }
     }),

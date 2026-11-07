@@ -6,9 +6,8 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
-  // O service worker precisa de headers especiais:
-  //  - no-cache: o browser vai sempre verificar se há uma versão nova do sw.js
-  //  - CSP restrita: o sw.js só pode carregar código do nosso próprio site
+  // The browser always checks for a new version of the service worker, which can
+  // only load code from this site.
   async headers() {
     return [
       {

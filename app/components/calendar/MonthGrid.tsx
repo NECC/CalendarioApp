@@ -1,22 +1,23 @@
 "use client";
-
+// Month grid: one circle per day, with coloured dots on days with events.
 import { memo, useMemo } from "react";
-import type { calendarEvent } from "@/types/calendar";
-import { getCategoryColor } from "../../../lib/category-colors";
-import { dayKey, isSameDay } from "../../../lib/date-utils";
+import { StarIcon } from "@/app/components/calendar/StarIcon";
+import { getCategoryColor } from "@/lib/category-colors";
+import { dayKey, isSameDay } from "@/lib/date-utils";
+import type { CalendarEvent } from "@/types/calendar";
 
 interface MonthGridProps {
   date: Date;
-  events: calendarEvent[];
+  events: CalendarEvent[];
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
-  /** IDs dos eventos com estrela (marcados no dia com uma estrela pequena). */
-  starredIds?: Set<string>;
+  /** IDs of starred events (their day shows a small star). */
+  starredIds: Set<string>;
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-// Cada dia é um círculo que cresce com a altura disponível (até 2.75rem)
+// Each day is a circle that grows with the available height (up to 2.75rem)
 const DAY_BOX = "relative h-full max-h-11 aspect-square";
 
 export const MonthGrid = memo(function MonthGrid({
@@ -29,6 +30,7 @@ export const MonthGrid = memo(function MonthGrid({
   const year = date.getFullYear();
   const month = date.getMonth();
 
+  // Only the weeks the month needs (4, 5 or 6), sharing the full height.
   const { cells, weeks } = useMemo(() => {
     const firstWeekday = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -40,6 +42,7 @@ export const MonthGrid = memo(function MonthGrid({
     return { cells, weeks };
   }, [year, month]);
 
+  // Categories of each day, at most 3 dots.
   const categoriesByDay = useMemo(() => {
     const map = new Map<string, string[]>();
     for (const event of events) {
@@ -55,7 +58,6 @@ export const MonthGrid = memo(function MonthGrid({
 
   const starredDays = useMemo(() => {
     const set = new Set<string>();
-    if (!starredIds?.size) return set;
     for (const event of events) {
       if (starredIds.has(event.id)) set.add(dayKey(new Date(event.startTimestampnz)));
     }
@@ -84,7 +86,7 @@ export const MonthGrid = memo(function MonthGrid({
         {cells.map(({ date: cellDate, inMonth }) => {
           const day = cellDate.getDate();
 
-          // Dias de outros meses: célula vazia (mantém o alinhamento dos dias da semana).
+          // Days from other months: an empty cell, which keeps the weekdays aligned.
           if (!inMonth) {
             return <div key={`out-${cellDate.getTime()}`} aria-hidden="true" />;
           }
@@ -103,7 +105,7 @@ export const MonthGrid = memo(function MonthGrid({
                   onClick={() => onSelectDate(cellDate)}
                   aria-pressed={isSelected}
                   aria-current={isToday ? "date" : undefined}
-                  aria-label={cellDate.toLocaleDateString("pt-PT", {
+                  aria-label={cellDate.toLocaleDateString("en-GB", {
                     day: "numeric",
                     month: "long",
                     year: "numeric",
@@ -120,14 +122,11 @@ export const MonthGrid = memo(function MonthGrid({
                 </button>
 
                 {starredDays.has(dayKey(cellDate)) && (
-                  <svg
+                  <StarIcon
                     className="absolute -top-0.5 -right-0.5 w-3 h-3 text-amber-400 pointer-events-none"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
+                    filled
+                    outlined={false}
+                  />
                 )}
 
                 {categories.length > 0 && (
