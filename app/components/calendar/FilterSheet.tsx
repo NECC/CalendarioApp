@@ -1,46 +1,46 @@
 "use client";
-
+// Filters panel that slides up from the bottom. Includes the reminders switch.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CATEGORY_COLORS } from "../../../lib/category-colors";
-import { SUBJECTS_DATA } from "../../../lib/subjects";
-import { NotificationSettings } from "./NotificationSettings";
+import { NotificationSettings } from "@/app/components/calendar/NotificationSettings";
 import type { PushControls } from "@/hooks/usePushNotifications";
+import { CATEGORY_COLORS } from "@/lib/category-colors";
+import { SUBJECTS_DATA } from "@/lib/subjects";
 
 const YEARS = [
   {
     year: 1,
-    label: "1º Ano",
-    allLabel: "Todo o 1º ano",
+    label: "Year 1",
+    allLabel: "All of year 1",
     color: CATEGORY_COLORS.ano1,
   },
   {
     year: 2,
-    label: "2º Ano",
-    allLabel: "Todo o 2º ano",
+    label: "Year 2",
+    allLabel: "All of year 2",
     color: CATEGORY_COLORS.ano2,
   },
   {
     year: 3,
-    label: "3º Ano",
-    allLabel: "Todo o 3º ano",
+    label: "Year 3",
+    allLabel: "All of year 3",
     color: CATEGORY_COLORS.ano3,
   },
   {
     year: 0,
-    label: "Eventos Gerais",
-    allLabel: "Todos os eventos gerais",
+    label: "General events",
+    allLabel: "All general events",
     color: CATEGORY_COLORS.eventos,
   },
 ];
 
 interface FilterSheetProps {
-  /** Anos inteiros selecionados (0 = eventos gerais). */
+  /** Whole years selected (0 = general events). */
   years: number[];
-  /** Siglas das disciplinas selecionadas (de qualquer ano). */
+  /** Codes of the selected subjects, from any year. */
   subjects: string[];
   resultCount: number;
   onToggleYear: (year: number) => void;
-  onToggleSubject: (sigla: string) => void;
+  onToggleSubject: (code: string) => void;
   onClear: () => void;
   onClose: () => void;
   push: PushControls;
@@ -70,7 +70,7 @@ function Chevron({
   );
 }
 
-/** Abre/fecha com animação de altura (grid 0fr -> 1fr), sem medir pixéis. */
+/** Opens and closes with a height animation (grid 0fr to 1fr), without measuring pixels. */
 function Collapsible({
   open,
   children,
@@ -131,13 +131,12 @@ export function FilterSheet({
   onClose,
   push,
 }: FilterSheetProps) {
-  // Abre já expandidos os anos que têm seleção. Cada ano abre/fecha
-  // de forma independente (não interfere com o que está selecionado).
+  // Years with a selection start open.
   const [expandedYears, setExpandedYears] = useState<number[]>(() =>
     YEARS.map((y) => y.year).filter(
       (y) =>
         years.includes(y) ||
-        SUBJECTS_DATA.some((s) => s.year === y && subjects.includes(s.sigla)),
+        SUBJECTS_DATA.some((s) => s.year === y && subjects.includes(s.code)),
     ),
   );
   const [expandedSemesters, setExpandedSemesters] = useState<string[]>([
@@ -147,8 +146,7 @@ export function FilterSheet({
   ]);
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  // Entrada/saída suaves: `shown` controla o translate e a opacidade do fundo.
-  // Ao fechar, anima a saída e só depois pede ao pai para desmontar.
+  // When closing, animate out first and only then remove the panel.
   const [shown, setShown] = useState(false);
   const closingRef = useRef(false);
   const closeTimer = useRef<number | null>(null);
@@ -196,7 +194,7 @@ export function FilterSheet({
       className="fixed inset-0 z-[100] flex flex-col justify-end"
       role="dialog"
       aria-modal="true"
-      aria-label="Filtros"
+      aria-label="Filters"
     >
       <div
         className={`absolute inset-0 bg-black/60 transition-opacity duration-300 motion-reduce:transition-none ${
@@ -212,7 +210,7 @@ export function FilterSheet({
       >
         <div className="flex justify-between items-center p-6 border-b border-border/50 bg-background z-20 rounded-t-3xl">
           <h3 className="text-xl font-extrabold text-foreground tracking-tight">
-            Filtros
+            Filters
           </h3>
           <div className="flex items-center gap-2">
             <button
@@ -223,12 +221,12 @@ export function FilterSheet({
                 hasFilters ? "opacity-100" : "opacity-0 pointer-events-none"
               }`}
             >
-              Limpar
+              Clear
             </button>
             <button
               ref={closeRef}
               onClick={requestClose}
-              aria-label="Fechar filtros"
+              aria-label="Close filters"
               className="w-8 h-8 flex items-center justify-center rounded-full bg-muted/20 text-foreground hover:bg-muted/40 transition-colors"
             >
               <svg
@@ -254,15 +252,15 @@ export function FilterSheet({
             const yearSubjects = SUBJECTS_DATA.filter((s) => s.year === year);
             const wholeYear = years.includes(year);
             const pickedCount = yearSubjects.filter((s) =>
-              subjects.includes(s.sigla),
+              subjects.includes(s.code),
             ).length;
 
             const renderSubject = (sub: (typeof SUBJECTS_DATA)[number]) => (
               <CheckRow
-                key={sub.sigla}
+                key={sub.code}
                 label={sub.name}
-                checked={wholeYear || subjects.includes(sub.sigla)}
-                onToggle={() => onToggleSubject(sub.sigla)}
+                checked={wholeYear || subjects.includes(sub.code)}
+                onToggle={() => onToggleSubject(sub.code)}
               />
             );
 
@@ -286,7 +284,7 @@ export function FilterSheet({
                     <span className="font-bold text-foreground">{label}</span>
                     {(wholeYear || pickedCount > 0) && (
                       <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-accent/15 text-accent animate-in fade-in zoom-in-90 duration-200">
-                        {wholeYear ? "Tudo" : pickedCount}
+                        {wholeYear ? "All" : pickedCount}
                       </span>
                     )}
                   </div>
@@ -326,7 +324,7 @@ export function FilterSheet({
                               className="w-full flex items-center justify-between py-2 text-sm font-semibold"
                             >
                               <span className="text-muted-foreground">
-                                {sem}º Semestre
+                                Semester {sem}
                               </span>
                               <Chevron
                                 open={semOpen}
@@ -353,7 +351,7 @@ export function FilterSheet({
             onClick={requestClose}
             className="w-full mt-6 mb-4 h-12 shrink-0 bg-foreground text-background rounded-xl font-bold text-[15px] hover:opacity-90 active:scale-95 transition-transform"
           >
-            Ver {resultCount} {resultCount === 1 ? "evento" : "eventos"}
+            Show {resultCount} {resultCount === 1 ? "event" : "events"}
           </button>
         </div>
       </div>

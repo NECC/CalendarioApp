@@ -6,15 +6,12 @@ export function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
-/** Chave "YYYY-M-D" (sem zeros) para agrupar eventos por dia. */
+/** Key for grouping events by day. */
 export function dayKey(d: Date): string {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
-/**
- * Dia a selecionar ao mudar de mês:
- * hoje, se o mês for o atual; senão, dia 1.
- */
+/** Day to select when changing month: today in the current month, otherwise the 1st. */
 export function defaultSelectedDate(month: Date, today = new Date()): Date {
   return month.getFullYear() === today.getFullYear() &&
     month.getMonth() === today.getMonth()

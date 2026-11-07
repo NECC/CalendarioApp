@@ -1,16 +1,10 @@
-export type CategoryId = string; // Permitir qualquer string para os IDs
-
-export interface Category {
-  id: string;
-  name: string;
-  color: string;
-}
-
-export interface calendarEvent {
+/** A test, submission or event in the calendar. */
+export interface CalendarEvent {
+  /** Stable ID, used to save stars. */
   id: string;
   title: string;
-  description?: string;
-  startTimestampnz: Date | string;
-  endTimestampnz: Date | string;
-  category: string; // Permitir string para corresponder aos novos IDs
+  /** Local date and time. The list has no real times, so only the date is used. */
+  startTimestampnz: string;
+  /** "ano1", "ano2", "ano3" or "eventos". */
+  category: string;
 }

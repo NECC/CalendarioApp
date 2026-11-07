@@ -1,8 +1,9 @@
 "use client";
-// Android e Chrome/Edge disparam "beforeinstallprompt". No iPhone esse evento
-// não existe, por isso mostramos as instruções de instalação.
+// Invitation to install the app. Android and Chrome/Edge have their own install
+// prompt. The iPhone does not, so it shows instructions instead.
 
 import { useEffect, useState } from "react";
+import { isInstalled, isIOS } from "@/lib/device";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -17,20 +18,11 @@ export function InstallPrompt() {
   const [hidden, setHidden] = useState(true);
 
   useEffect(() => {
-    const standalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (navigator as Navigator & { standalone?: boolean }).standalone === true;
-
     let dismissed = false;
     try {
       dismissed = localStorage.getItem(DISMISS_KEY) === "1";
     } catch {}
-    if (standalone || dismissed) return;
-
-    // O iPad recente identifica-se como "Macintosh", mas tem ecrã tátil.
-    const ua = navigator.userAgent;
-    const isIOS =
-      /iPhone|iPad|iPod/.test(ua) || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
+    if (isInstalled() || dismissed) return;
 
     const onBeforeInstall = (e: Event) => {
       e.preventDefault();
@@ -42,7 +34,7 @@ export function InstallPrompt() {
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     window.addEventListener("appinstalled", onInstalled);
 
-    const t = isIOS ? setTimeout(() => { setShowIOS(true); setHidden(false); }, 0) : undefined;
+    const t = isIOS() ? setTimeout(() => { setShowIOS(true); setHidden(false); }, 0) : undefined;
 
     return () => {
       clearTimeout(t);
@@ -51,14 +43,14 @@ export function InstallPrompt() {
     };
   }, []);
 
-  function fechar() {
+  function dismiss() {
     setHidden(true);
     try {
       localStorage.setItem(DISMISS_KEY, "1");
     } catch {}
   }
 
-  async function instalar() {
+  async function install() {
     if (!deferred) return;
     await deferred.prompt();
     await deferred.userChoice;
@@ -73,25 +65,25 @@ export function InstallPrompt() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/icons/necc-icon-192.png" alt="" className="w-10 h-10 rounded-xl" />
       <div className="flex-1 min-w-0">
-        <p className="font-semibold">Instala o NECC Calendário</p>
+        <p className="font-semibold">Install NECC Calendar</p>
         {showIOS ? (
           <p className="text-xs opacity-70">
-            Toca em <b>Partilhar</b> e depois em{" "}
-            <b>Adicionar ao ecrã principal</b> para receberes avisos dos testes.
+            Tap <b>Share</b>, then{" "}
+            <b>Add to Home Screen</b> to get test reminders.
           </p>
         ) : (
-          <p className="text-xs opacity-70">Acesso rápido e avisos dos teus testes.</p>
+          <p className="text-xs opacity-70">Quick access and reminders for your tests.</p>
         )}
       </div>
       {!showIOS && (
         <button
-          onClick={instalar}
+          onClick={install}
           className="shrink-0 bg-accent text-background font-semibold rounded-full px-3 py-1.5"
         >
-          Instalar
+          Install
         </button>
       )}
-      <button onClick={fechar} aria-label="Fechar" className="shrink-0 opacity-60 px-1 text-lg leading-none">
+      <button onClick={dismiss} aria-label="Close" className="shrink-0 opacity-60 px-1 text-lg leading-none">
         ×
       </button>
     </div>

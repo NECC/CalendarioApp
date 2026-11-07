@@ -1,30 +1,19 @@
+// Base structure of every page: PWA metadata and global components.
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
-import { RegisterSW } from "@/app/components/RegisterSW";
-import { OfflineBanner } from "@/app/components/OfflineBanner";
 import { InstallPrompt } from "@/app/components/InstallPrompt";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { OfflineBanner } from "@/app/components/OfflineBanner";
+import { RegisterSW } from "@/app/components/RegisterSW";
 
 export const metadata: Metadata = {
-  title: "NECC Calendário",
-  description: "Calendário de testes, entregas e eventos de LCC.",
+  title: "NECC Calendar",
+  description: "Calendar of LCC tests, submissions and events.",
   manifest: "/manifest.json",
-  applicationName: "NECC Calendário",
-  // iPhone: nome, estilo da barra de estado e ícone quando instalada no ecrã principal.
+  applicationName: "NECC Calendar",
+  // Name and icon when the app is installed on iPhone.
   appleWebApp: {
     capable: true,
-    title: "NECCalendário",
+    title: "NECCalendar",
     statusBarStyle: "default",
   },
   icons: {
@@ -37,7 +26,6 @@ export const metadata: Metadata = {
   formatDetection: { telephone: false },
 };
 
-// Cor da barra do browser/sistema (igual ao theme_color do manifest).
 export const viewport: Viewport = {
   themeColor: "#008cca",
   width: "device-width",
@@ -45,27 +33,9 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="pt-PT"
-      className={`${geistSans.variable} ${geistMono.variable}`}
-      suppressHydrationWarning
-    >
-      <head>
-        <Script id="theme-script" strategy="beforeInteractive">
-          {`
-            try {
-              const theme = localStorage.getItem('theme') || 'light';
-              document.documentElement.setAttribute('data-theme', theme);
-            } catch (e) {}
-          `}
-        </Script>
-      </head>
+    <html lang="en">
       <body>
         <RegisterSW />
         <OfflineBanner />
