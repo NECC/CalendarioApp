@@ -1,8 +1,4 @@
-// =============================================================
-// Fonte única dos testes/eventos.
-// Usada pela página (via /api/calendar) e pelo cron das notificações
-// (/api/cron/notify) — assim os dois veem sempre as mesmas datas.
-// =============================================================
+// Fonte única dos testes, usada pela página e pelo cron dos avisos.
 import type { calendarEvent, Category } from "@/types/calendar";
 
 interface RawItem {
@@ -105,8 +101,7 @@ export function getCalendarEvents(): calendarEvent[] {
 
     for (const item of lista) {
       events.push({
-        // ID estável (não depende da ordem na lista): é usado para guardar
-        // as estrelas — se mudasse, as estrelas iam parar ao teste errado.
+        // As estrelas guardam este ID: não pode depender da ordem da lista.
         id: eventId(categoryId, item),
         title: `${item.uc} - ${item.type}`,
         description: item.type,

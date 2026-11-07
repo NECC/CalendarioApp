@@ -1,7 +1,4 @@
 "use client";
-// Secção "Avisos" no topo do ecrã de filtros: ligar/desligar e testar.
-// Os avisos são só dos testes com estrela ⭐ (ver lib/notify.ts).
-
 import type { PushControls } from "@/hooks/usePushNotifications";
 
 interface Props {
@@ -18,14 +15,14 @@ function BellIcon() {
 }
 
 export function NotificationSettings({ push }: Props) {
-  const { status, busy, message, enable, disable, sendTest } = push;
+  const { status, busy, message, syncError, enable, disable } = push;
 
   let description: React.ReactNode;
   switch (status) {
     case "ios-not-installed":
       description = (
         <>
-          No iPhone, instala primeiro a app: <b>Partilhar</b> → <b>Adicionar ao ecrã principal</b>, e abre-a a partir do ícone.
+          No iPhone, instala primeiro a app: toca em <b>Partilhar</b>, depois em <b>Adicionar ao ecrã principal</b>, e abre-a a partir do ícone.
         </>
       );
       break;
@@ -38,14 +35,14 @@ export function NotificationSettings({ push }: Props) {
     case "on":
       description = (
         <>
-          Avisos ligados. Dá ⭐ a um teste na agenda e recebes um aviso <b>todos os dias às 10h</b>,
-          desde uma semana antes até ao dia do teste.
+          Recebes um aviso <b>todos os dias às 10h</b> dos testes com estrela, desde uma semana antes
+          até ao dia do teste.
         </>
       );
       break;
     default:
       description =
-        "Dá ⭐ a um teste na agenda para receberes um aviso todos os dias às 10h, desde uma semana antes.";
+        "Desligados. Liga-os para receberes um aviso todos os dias às 10h dos testes com estrela, desde uma semana antes.";
   }
 
   const canToggle = status === "on" || status === "off";
@@ -59,7 +56,6 @@ export function NotificationSettings({ push }: Props) {
         <span className="flex-1 font-bold text-foreground">Avisos dos testes</span>
 
         {canToggle && (
-          // Interruptor (switch) acessível: role="switch" + aria-checked
           <button
             role="switch"
             aria-checked={status === "on"}
@@ -81,19 +77,9 @@ export function NotificationSettings({ push }: Props) {
 
       <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{description}</p>
 
-      {status === "on" && (
-        <button
-          onClick={sendTest}
-          disabled={busy}
-          className="mt-2 text-xs font-semibold text-accent underline underline-offset-2 disabled:opacity-50"
-        >
-          Enviar notificação de teste
-        </button>
-      )}
-
-      {message && (
+      {(syncError || message) && (
         <p role="status" className="mt-2 text-xs font-medium text-foreground">
-          {message}
+          {syncError || message}
         </p>
       )}
     </div>
