@@ -3,20 +3,20 @@ import type { CalendarEvent } from "@/types/calendar";
 
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-/** Looks for the term as a whole word, so "AM" does not match inside another word. */
+/** Procura o termo como palavra inteira, para "AM" não apanhar outra palavra. */
 const wholeWord = (term: string, flags: string) =>
   new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(term)}($|[^\\p{L}\\p{N}])`, flags);
 
-/** A title belongs to a subject if it has the subject's code or full name. */
+/** Um título pertence a uma UC se tiver o código ou o nome completo da UC. */
 function buildMatcher(subject: Subject): (title: string) => boolean {
-  const codeRe = wholeWord(subject.code, "u"); // case-sensitive
-  const nameRe = wholeWord(subject.name, "iu"); // case-insensitive
+  const codeRe = wholeWord(subject.code, "u"); // distingue maiúsculas
+  const nameRe = wholeWord(subject.name, "iu"); // não distingue maiúsculas
   return (title) => codeRe.test(title) || nameRe.test(title);
 }
 
 /**
- * An event appears if its year is in `years` or if it belongs to one of the
- * subjects in `codes`. With no filters, all events appear.
+ * Um evento aparece se o seu ano estiver em `years` ou se pertencer a uma das
+ * UCs em `codes`. Sem filtros, aparecem todos os eventos.
  */
 export function filterEvents(events: CalendarEvent[], years: number[], codes: string[]): CalendarEvent[] {
   if (years.length === 0 && codes.length === 0) return events;

@@ -1,8 +1,8 @@
-// List of subjects, used in the filters. Names are the official course names.
+// Lista de UCs, usada nos filtros. Os nomes são os nomes oficiais das UCs.
 export interface Subject {
   name: string;
   code: string;
-  /** 0 = general events */
+  /** 0 = eventos gerais */
   year: number;
   semester?: number;
 }
@@ -97,7 +97,7 @@ export const SUBJECTS_DATA: Subject[] = [
   { name: "A Festa dos 50 Anos", code: "50DI", year: 0 },
 ];
 
-/** Year of each event category (0 = general events). */
+/** Ano de cada categoria de evento (0 = eventos gerais). */
 export const EVENT_CATEGORY_YEAR: Record<string, number> = {
   ano1: 1,
   ano2: 2,

@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
-  // The browser always checks for a new version of the service worker, which can
-  // only load code from this site.
+  // O browser procura sempre uma nova versão do service worker, que só pode
+  // carregar código deste site.
   async headers() {
     return [
       {

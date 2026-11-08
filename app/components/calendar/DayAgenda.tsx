@@ -1,16 +1,16 @@
 "use client";
-// List of events on the selected day, each with its star.
+// Lista dos eventos do dia selecionado, cada um com a sua estrela.
 import { StarIcon } from "@/app/components/calendar/StarIcon";
 import { getCategoryColor } from "@/lib/category-colors";
 import type { CalendarEvent } from "@/types/calendar";
 
 interface DayAgendaProps {
   selectedDate: Date;
-  /** Events on the selected day, already filtered. */
+  /** Eventos do dia selecionado, já filtrados. */
   events: CalendarEvent[];
   starredIds: Set<string>;
   onToggleStar: (id: string) => void;
-  /** Message shown when there are stars but reminders cannot arrive. */
+  /** Mensagem mostrada quando há estrelas mas os avisos não podem chegar. */
   notificationHint: string | null;
 }
 
@@ -27,8 +27,8 @@ function StarButton({
     <button
       onClick={onToggle}
       aria-pressed={active}
-      aria-label={active ? `Remove star from ${event.title}` : `Star ${event.title}`}
-      title={active ? "Remove star" : "Star (you get one reminder a day during the week before)"}
+      aria-label={active ? `Tirar estrela de ${event.title}` : `Dar estrela a ${event.title}`}
+      title={active ? "Tirar estrela" : "Dar estrela (recebes um aviso por dia na semana antes)"}
       className={`shrink-0 -mr-1 p-1 rounded-full transition active:scale-75 ${
         active ? "text-amber-400" : "opacity-60 hover:opacity-100"
       }`}
@@ -38,7 +38,7 @@ function StarButton({
   );
 }
 
-/** Star for general events, book for subjects. */
+/** Estrela para eventos gerais, livro para UCs. */
 function CategoryIcon({ category }: { category: string }) {
   if (category === "eventos") return <StarIcon className="w-4 h-4 shrink-0" />;
   return (
@@ -67,13 +67,14 @@ export function DayAgenda({
 }: DayAgendaProps) {
   const showHint = Boolean(notificationHint) && events.some((e) => starredIds.has(e.id));
 
-  // "7 November 2026"
+  // "7 Novembro 2026"
   const headerText = selectedDate
-    .toLocaleDateString("en-GB", {
+    .toLocaleDateString("pt-PT", {
       day: "numeric",
       month: "long",
       year: "numeric",
-    });
+    })
+    .replace(/ de /g, " ");
 
   return (
     <div className="flex-1 min-h-0 flex flex-col w-full bg-card rounded-3xl border border-border pt-4 px-4 pb-3 shadow-sm">
@@ -92,7 +93,7 @@ export function DayAgenda({
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col gap-2 pb-2">
         {events.length === 0 ? (
           <p className="text-sm text-muted-foreground py-4 text-center">
-            No events on this day.
+            Sem eventos para este dia.
           </p>
         ) : (
           events.map((event) => {

@@ -1,35 +1,35 @@
 "use client";
-// Swiping sideways to change month.
+// Deslizar para o lado para mudar de mês.
 import { useCallback, useEffect, useRef } from "react";
 
 interface UseSwipeOptions {
-  /** Called when swiping left (for example, next month). */
+  /** Chamado ao deslizar para a esquerda (por exemplo, mês seguinte). */
   onSwipeLeft: () => void;
-  /** Called when swiping right (for example, previous month). */
+  /** Chamado ao deslizar para a direita (por exemplo, mês anterior). */
   onSwipeRight: () => void;
-  /** Minimum distance (px) to confirm the swipe. */
+  /** Distância mínima (px) para confirmar o gesto. */
   threshold?: number;
 }
 
 type Axis = "x" | "y" | null;
 
-const LOCK_DISTANCE = 8; // px of movement before deciding if it is horizontal or vertical
+const LOCK_DISTANCE = 8; // px de movimento antes de decidir se é horizontal ou vertical
 const OUT_MS = 150;
 const IN_MS = 220;
 
 /**
- * Horizontal swipe that:
- *  - ignores taps;
- *  - only reacts to mostly horizontal gestures, so vertical scrolling still works;
- *  - makes the element follow the finger and animates the content change.
+ * Gesto horizontal que:
+ *  - ignora toques;
+ *  - só reage a gestos sobretudo horizontais, para o scroll vertical continuar a funcionar;
+ *  - faz o elemento seguir o dedo e anima a mudança de conteúdo.
  *
- * The transform is applied directly to the element, without setState,
- * so nothing re-renders during the drag.
+ * O transform é aplicado diretamente ao elemento, sem setState,
+ * por isso nada é redesenhado durante o arrasto.
  *
- * Usage:
+ * Utilização:
  *   const { ref, handlers } = useSwipe<HTMLDivElement>({ ... });
  *   <div className="overflow-hidden touch-pan-y" {...handlers}>
- *     <div ref={ref}>content</div>
+ *     <div ref={ref}>conteúdo</div>
  *   </div>
  */
 export function useSwipe<T extends HTMLElement = HTMLDivElement>({
@@ -96,10 +96,10 @@ export function useSwipe<T extends HTMLElement = HTMLDivElement>({
       g.axis = Math.abs(dx) > Math.abs(dy) * 1.2 ? "x" : "y";
     }
 
-    if (g.axis !== "x") return; // vertical scroll: leave it to the browser
+    if (g.axis !== "x") return; // scroll vertical: fica a cargo do browser
 
     g.dx = dx;
-    // resistance: the content follows the finger, but more slowly
+    // resistência: o conteúdo segue o dedo, mas mais devagar
     el.style.transform = `translateX(${dx * 0.6}px)`;
     el.style.opacity = String(1 - Math.min(Math.abs(dx) / 500, 0.35));
   }, []);
@@ -111,14 +111,14 @@ export function useSwipe<T extends HTMLElement = HTMLDivElement>({
       if (!g.tracking || !el) return;
       g.tracking = false;
 
-      if (g.axis !== "x") return; // it was a tap or a vertical scroll
+      if (g.axis !== "x") return; // foi um toque ou um scroll vertical
 
       if (cancelled || Math.abs(g.dx) < threshold) {
         snapBack(el);
         return;
       }
 
-      const goNext = g.dx < 0; // dragging left means next month
+      const goNext = g.dx < 0; // arrastar para a esquerda é o mês seguinte
       const trigger = goNext
         ? callbacks.current.onSwipeLeft
         : callbacks.current.onSwipeRight;
@@ -135,18 +135,18 @@ export function useSwipe<T extends HTMLElement = HTMLDivElement>({
       animating.current = true;
       const dir = goNext ? 1 : -1;
 
-      // 1) slide out in the direction of the finger
+      // 1) sai na direção do dedo
       el.style.transition = `transform ${OUT_MS}ms ease-in, opacity ${OUT_MS}ms ease-in`;
       el.style.transform = `translateX(${-dir * 100}%)`;
       el.style.opacity = "0";
 
       later(() => {
-        // 2) change the month and place the new content on the opposite side
+        // 2) muda o mês e coloca o novo conteúdo no lado oposto
         trigger();
         el.style.transition = "none";
         el.style.transform = `translateX(${dir * 40}%)`;
 
-        // 3) slide to the centre (2 frames so React can paint the new month)
+        // 3) desliza para o centro (2 frames para o React desenhar o novo mês)
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
             el.style.transition = `transform ${IN_MS}ms ease-out, opacity ${IN_MS}ms ease-out`;

@@ -1,5 +1,5 @@
 "use client";
-// Calendar filters, saved on the device: whole years and individual subjects.
+// Filtros do calendário, guardados no dispositivo: anos inteiros e UCs individuais.
 import { useCallback, useEffect, useState } from "react";
 import { SUBJECTS_DATA } from "@/lib/subjects";
 
@@ -27,7 +27,7 @@ export function useEventFilters() {
     } catch {}
   }, [years, subjects]);
 
-  /** Selecting a whole year replaces the individual subjects of that year. */
+  /** Selecionar um ano inteiro substitui as UCs individuais desse ano. */
   const toggleYear = useCallback((year: number) => {
     setYears((prev) => (prev.includes(year) ? prev.filter((y) => y !== year) : [...prev, year]));
     setSubjects((prev) =>
@@ -40,8 +40,8 @@ export function useEventFilters() {
       const subject = SUBJECTS_DATA.find((s) => s.code === code);
       if (!subject) return;
 
-      // Unselecting a subject from a whole year: the year is no longer
-      // selected, and all the other subjects of that year are selected instead.
+      // Tirar uma UC de um ano inteiro: o ano deixa de estar selecionado
+      // e passam a estar selecionadas todas as outras UCs desse ano.
       if (years.includes(subject.year)) {
         const others = SUBJECTS_DATA.filter((s) => s.year === subject.year && s.code !== code);
         setYears((prev) => prev.filter((y) => y !== subject.year));

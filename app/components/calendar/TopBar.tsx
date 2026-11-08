@@ -1,10 +1,10 @@
-// Top bar: month name and filters button.
+// Barra de topo: nome do mês e botão dos filtros.
 import Image from "next/image";
 
 interface TopBarProps {
   monthTitle: string;
   onOpenFilters: () => void;
-  /** Number of active filters, shown on the button. */
+  /** Número de filtros ativos, mostrado no botão. */
   activeFilterCount: number;
 }
 
@@ -28,8 +28,8 @@ export function TopBar({ monthTitle, onOpenFilters, activeFilterCount }: TopBarP
       <button
         onClick={onOpenFilters}
         className="relative w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-foreground hover:bg-muted/20 shadow-xs transition-transform active:scale-95"
-        title="Filters"
-        aria-label={activeFilterCount > 0 ? `Filters (${activeFilterCount} active)` : "Filters"}
+        title="Filtros"
+        aria-label={activeFilterCount > 0 ? `Filtros (${activeFilterCount} ativos)` : "Filtros"}
       >
         <svg
           className="w-4 h-4"

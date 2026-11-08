@@ -1,10 +1,10 @@
-// Notification diagnostics: open /api/push/health in a browser.
-// Shows what is configured and the last cron result. Never shows the keys.
+// Diagnóstico das notificações: abrir /api/push/health no browser.
+// Mostra o que está configurado e os resultados dos últimos crons. Nunca mostra as chaves.
 import { createECDH } from "node:crypto";
 import { NextResponse, connection } from "next/server";
-import { getLastCronRun } from "@/lib/push/store";
+import { getRecentCronRuns } from "@/lib/push/store";
 
-/** Does the public key match the private one? If not, the push service refuses sends. */
+/** A chave pública corresponde à privada? Se não, o serviço de push recusa os envios. */
 function vapidKeysMatch(): boolean {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
@@ -33,17 +33,17 @@ export async function GET() {
     ),
   };
 
-  let lastCron: unknown = null;
+  let recentCrons: unknown[] = [];
   let redisReachable = true;
   try {
-    lastCron = await getLastCronRun();
+    recentCrons = await getRecentCronRuns();
   } catch {
     redisReachable = false;
   }
 
   const ok = Object.values(checks).every(Boolean) && redisReachable;
   return NextResponse.json(
-    { ok, ...checks, redisReachable, lastCron },
+    { ok, ...checks, redisReachable, lastCron: recentCrons[0] ?? null, recentCrons },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

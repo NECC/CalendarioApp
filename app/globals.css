@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Colours available as Tailwind classes (bg-accent, text-foreground, ...) */
+/* Cores disponíveis como classes do Tailwind (bg-accent, text-foreground, ...) */
 @theme {
   --color-accent: var(--accent);
   --color-background: var(--background);
@@ -15,8 +15,8 @@
   --border: #e5e5e5;
 }
 
-/* The app fills the screen exactly and the page never scrolls, only the lists
-   inside it. dvh is the real visible height, without the area behind the browser bar. */
+/* A app ocupa exatamente o ecrã e a página nunca faz scroll, só as listas dentro
+   dela. dvh é a altura visível real, sem a área por trás da barra do browser. */
 html,
 body {
   height: 100%;

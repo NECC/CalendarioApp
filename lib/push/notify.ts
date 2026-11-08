@@ -1,6 +1,6 @@
-// Decides which reminders to send and sends them. Runs once a day, from the cron.
-// Each person gets one reminder for each starred test that is 7 days away or
-// less, up to the day itself.
+// Decide que avisos enviar e envia-os. Corre uma vez por dia, a partir do cron.
+// Cada pessoa recebe um aviso por cada teste com estrela que esteja a 7 dias ou
+// menos, até ao próprio dia.
 import "server-only";
 import { getCalendarEvents } from "@/lib/calendar-data";
 import { claimDelivery, getAllSubscriptions, releaseDelivery } from "@/lib/push/store";
@@ -11,13 +11,13 @@ const TIME_ZONE = "Europe/Lisbon";
 export const DAYS_BEFORE = 7;
 export const SEND_HOUR = 10;
 
-/** Date "YYYY-MM-DD" in Lisbon, `offsetDays` days from now. */
+/** Data "YYYY-MM-DD" em Lisboa, daqui a `offsetDays` dias. */
 export function lisbonDate(offsetDays = 0, now = new Date()): string {
   const d = new Date(now.getTime() + offsetDays * 24 * 60 * 60 * 1000);
   return new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE }).format(d);
 }
 
-/** Current hour (0-23) in Lisbon. */
+/** Hora atual (0-23) em Lisboa. */
 export function lisbonHour(now = new Date()): number {
   return Number(
     new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, hour: "2-digit", hourCycle: "h23" }).format(now),
@@ -26,31 +26,33 @@ export function lisbonHour(now = new Date()): number {
 
 const eventDay = (e: CalendarEvent) => String(e.startTimestampnz).slice(0, 10);
 
-/** "2026-11-08" becomes "Sunday 8 November". */
+/** "2026-11-08" passa a "Domingo, 8 de novembro". */
 function formatDay(day: string): string {
   const [y, m, d] = day.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString("en-GB", {
+  const text = new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString("pt-PT", {
     weekday: "long",
     day: "numeric",
     month: "long",
     timeZone: "UTC",
   });
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-/** Reminder text: "Tomorrow: Cálculo - Test" and "Sunday 8 November". */
+/** Texto do aviso: "Amanhã: Cálculo - Teste" e "Domingo, 8 de novembro". */
 function starPayload(event: CalendarEvent, daysLeft: number): PushPayload {
   const day = eventDay(event);
-  const prefix = daysLeft === 0 ? "Today" : daysLeft === 1 ? "Tomorrow" : `${daysLeft} days left`;
+  const prefix = daysLeft === 0 ? "Hoje" : daysLeft === 1 ? "Amanhã" : `Faltam ${daysLeft} dias`;
   return {
     title: `${prefix}: ${event.title}`,
     body: formatDay(day),
     url: `/?date=${day}`,
-    // Fixed tag per test: today's reminder replaces yesterday's.
-    tag: `star-${event.id}`,
+    // A tag muda todos os dias: o Safari não suporta `renotify`, por isso uma tag
+    // repetida podia não alertar a pessoa.
+    tag: `star-${event.id}-${daysLeft}`,
   };
 }
 
-/** Reminders a person gets today. */
+/** Avisos que uma pessoa recebe hoje. */
 export function buildJobs(
   allEvents: CalendarEvent[],
   starred: string[] = [],
@@ -69,7 +71,16 @@ export function buildJobs(
   return jobs;
 }
 
-/** Sends today's reminders to every device and returns a summary of what happened. */
+/** Nome curto do serviço de push, para separar iPhone e Android no diagnóstico. */
+function pushServiceName(endpoint: string): string {
+  const host = new URL(endpoint).hostname;
+  if (host.endsWith("push.apple.com")) return "apple";
+  if (host.endsWith("googleapis.com")) return "google";
+  if (host.endsWith("mozilla.com")) return "mozilla";
+  return "outro";
+}
+
+/** Envia os avisos de hoje a todos os dispositivos e devolve um resumo do que aconteceu. */
 export async function runNotifications(now = new Date(), { force = false } = {}) {
   const allEvents = getCalendarEvents();
   const subs = await getAllSubscriptions();
@@ -85,6 +96,7 @@ export async function runNotifications(now = new Date(), { force = false } = {})
     gone: 0,
     errors: 0,
     errorStatuses: {} as Record<string, number>,
+    byService: {} as Record<string, { devices: number; sent: number; gone: number; errors: number }>,
   };
 
   const addError = (status: string) => {
@@ -99,6 +111,8 @@ export async function runNotifications(now = new Date(), { force = false } = {})
       stats.withJobs++;
 
       const endpoint = sub.subscription.endpoint;
+      const service = (stats.byService[pushServiceName(endpoint)] ??= { devices: 0, sent: 0, gone: 0, errors: 0 });
+      service.devices++;
       try {
         if (!force && !(await claimDelivery(date, endpoint))) {
           stats.alreadySent++;
@@ -110,19 +124,23 @@ export async function runNotifications(now = new Date(), { force = false } = {})
           const r = await sendPush(sub.subscription, payload);
           if (r.outcome === "ok") {
             stats.sent++;
+            service.sent++;
           } else if (r.outcome === "gone") {
             stats.gone++;
+            service.gone++;
             break;
           } else {
             failed = true;
-            addError(String(r.status ?? "no-response"));
+            service.errors++;
+            addError(String(r.status ?? "sem-resposta"));
           }
         }
-        // The next cron retries this device.
+        // O próximo cron volta a tentar este dispositivo.
         if (failed && !force) await releaseDelivery(date, endpoint);
       } catch (err) {
-        console.error("[notify] subscription error:", err);
-        addError("exception");
+        console.error("[notify] erro na subscrição:", err);
+        service.errors++;
+        addError("excecao");
         await releaseDelivery(date, endpoint).catch(() => {});
       }
     }),
