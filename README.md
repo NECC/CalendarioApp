@@ -48,9 +48,8 @@ No plano Hobby, a Vercel pode executar um cron em qualquer minuto da hora marcad
 
 O envio às horas certas vem de um agendador externo. Em [cron-job.org](https://cron-job.org) (gratuito), criar um cron com:
 
-- URL: `https://URL-DA-APP/api/cron/notify`
+- URL: `https://URL-DA-APP/api/cron/notify?secret=<CRON_SECRET>`
 - Horário: todos os dias às 10:00, fuso `Europe/Lisbon`
-- Cabeçalho: `Authorization: Bearer <CRON_SECRET>`
 
 Os crons da Vercel podem ficar ativos como segurança: quem já recebeu o aviso não o recebe outra vez.
 
