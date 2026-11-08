@@ -1,4 +1,4 @@
-// Gives the page the list of tests. The service worker caches the response for offline use.
+// Dá à página a lista de testes. O service worker guarda a resposta para funcionar sem ligação.
 import { NextResponse } from "next/server";
 import { getCalendarEvents } from "@/lib/calendar-data";
 

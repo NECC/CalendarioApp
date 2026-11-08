@@ -1,6 +1,6 @@
 "use client";
-// Starred tests, saved on the device.
-// usePushNotifications sends this list to the server.
+// Testes com estrela, guardados no dispositivo.
+// O usePushNotifications envia esta lista para o servidor.
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const STARRED_KEY = "necc-starred";

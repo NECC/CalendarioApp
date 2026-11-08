@@ -1,7 +1,7 @@
-// Service worker: runs in the background, even with the app closed.
-// Caches the dates for offline use and shows notifications.
+// Service worker: corre em segundo plano, mesmo com a app fechada.
+// Guarda as datas para funcionar sem ligação e mostra as notificações.
 
-// Changing this name deletes the old cache on activate.
+// Mudar este nome apaga a cache antiga no evento activate.
 const CACHE = "necc-v1";
 
 self.addEventListener("install", () => {
@@ -19,7 +19,7 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Network first, falling back to the cache when offline.
+// Primeiro a rede, com a cache como recurso quando não há ligação.
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
@@ -47,7 +47,7 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-// A reminder arrived from the server: show the notification.
+// Chegou um aviso do servidor: mostra a notificação.
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -57,7 +57,7 @@ self.addEventListener("push", (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(data.title || "NECC Calendar", {
+    self.registration.showNotification(data.title || "NECC Calendário", {
       body: data.body || "",
       icon: "/icons/necc-icon-192.png",
       badge: "/icons/necc-icon-192-monochrome.png",
@@ -68,7 +68,7 @@ self.addEventListener("push", (event) => {
   );
 });
 
-// Tapping the notification opens the app on the day of the test.
+// Tocar na notificação abre a app no dia do teste.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = event.notification.data?.url || "/";
@@ -78,7 +78,7 @@ self.addEventListener("notificationclick", (event) => {
       const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       for (const win of windows) {
         if ("focus" in win) {
-          // navigate() fails in windows this service worker does not control.
+          // navigate() falha em janelas que este service worker não controla.
           try {
             await win.navigate(url);
           } catch {}

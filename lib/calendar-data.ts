@@ -1,5 +1,5 @@
-// List of tests and submissions: dates are changed here.
-// The page and the reminder cron both read from here, so they always agree.
+// Lista de testes e entregas: as datas mudam-se aqui.
+// A página e o cron dos avisos leem daqui, por isso estão sempre de acordo.
 import type { CalendarEvent } from "@/types/calendar";
 
 interface RawItem {
@@ -9,11 +9,10 @@ interface RawItem {
   type: string;
 }
 
-// Academic year 2026/27: January tests and resits are in 2027.
+// Ano letivo 2026/27: os testes e recursos de janeiro são de 2027.
 //
-// The category names and the Portuguese `type` values below are part of each
-// event's ID, and stars are saved by ID. Changing them would lose saved stars.
-// TYPE_LABELS holds the English text shown in the app.
+// Os nomes das categorias e os valores de `type` fazem parte do ID de cada evento,
+// e as estrelas são guardadas por ID. Mudá-los faria perder as estrelas guardadas.
 const RAW_DATA: Record<string, RawItem[]> = {
   ano1: [
     { subject: "PF", day: "2026-10-22", type: "Teste" },
@@ -74,20 +73,11 @@ const RAW_DATA: Record<string, RawItem[]> = {
   ],
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  Teste: "Test",
-  "Mini-Teste": "Mini-test",
-  Recurso: "Resit",
-  Entrega: "Submission",
-  "Entrega - (1ªParte)": "Submission (part 1)",
-  "Entrega - (2ªParte)": "Submission (part 2)",
-};
-
-/** For example, "ano1-2026-11-08-calculo-teste". */
+/** Por exemplo, "ano1-2026-11-08-calculo-teste". */
 function eventId(categoryId: string, item: RawItem): string {
   const slug = `${item.subject}-${item.type}`
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // removes accents
+    .replace(/[\u0300-\u036f]/g, "") // tira os acentos
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
@@ -101,8 +91,8 @@ export function getCalendarEvents(): CalendarEvent[] {
     for (const item of items) {
       events.push({
         id: eventId(categoryId, item),
-        title: `${item.subject} - ${TYPE_LABELS[item.type] ?? item.type}`,
-        // A date alone would be read as UTC, which can land on the wrong local day.
+        title: `${item.subject} - ${item.type}`,
+        // Uma data sozinha seria lida como UTC, o que pode cair no dia local errado.
         startTimestampnz: `${item.day}T09:00:00`,
         category: categoryId,
       });

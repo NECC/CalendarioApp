@@ -1,10 +1,10 @@
-// Placeholder for the main screen, shown while the data loads.
+// Esqueleto do ecrã principal, mostrado enquanto os dados carregam.
 export function CalendarSkeleton() {
   return (
     <div
       className="flex flex-col w-full h-dvh bg-background px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] gap-4 max-w-lg mx-auto animate-pulse overflow-hidden"
       aria-busy="true"
-      aria-label="Loading calendar"
+      aria-label="A carregar o calendário"
     >
       <div className="flex items-center justify-between w-full px-1 shrink-0">
         <div className="h-10 w-48 rounded-full bg-muted/30" />

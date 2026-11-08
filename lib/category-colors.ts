@@ -1,9 +1,9 @@
-// Colour of each category in the calendar and the filters.
+// Cor de cada categoria no calendário e nos filtros.
 export const CATEGORY_COLORS: Record<string, string> = {
-  ano1: "#3B82F6", // blue
-  ano2: "#10B981", // green
-  ano3: "#8B5CF6", // purple
-  eventos: "#111827", // black
+  ano1: "#3B82F6", // azul
+  ano2: "#10B981", // verde
+  ano3: "#8B5CF6", // roxo
+  eventos: "#111827", // preto
 };
 
 export function getCategoryColor(category: string): string {

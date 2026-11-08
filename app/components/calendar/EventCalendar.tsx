@@ -1,5 +1,5 @@
 "use client";
-// Main screen: brings together the calendar, the day's agenda and the filters.
+// Ecrã principal: junta o calendário, a agenda do dia e os filtros.
 import { useCallback, useMemo, useState } from "react";
 import { DayAgenda } from "@/app/components/calendar/DayAgenda";
 import { FilterSheet } from "@/app/components/calendar/FilterSheet";
@@ -14,18 +14,18 @@ import { filterEvents } from "@/lib/event-filters";
 import type { CalendarEvent } from "@/types/calendar";
 
 const MONTHS = [
-  "JANUARY",
-  "FEBRUARY",
-  "MARCH",
-  "APRIL",
-  "MAY",
-  "JUNE",
-  "JULY",
-  "AUGUST",
-  "SEPTEMBER",
-  "OCTOBER",
-  "NOVEMBER",
-  "DECEMBER",
+  "JANEIRO",
+  "FEVEREIRO",
+  "MARÇO",
+  "ABRIL",
+  "MAIO",
+  "JUNHO",
+  "JULHO",
+  "AGOSTO",
+  "SETEMBRO",
+  "OUTUBRO",
+  "NOVEMBRO",
+  "DEZEMBRO",
 ];
 
 interface CalendarState {
@@ -33,7 +33,7 @@ interface CalendarState {
   selected: Date;
 }
 
-/** Opens on today, or on the day given by a notification ("/?date=YYYY-MM-DD"). */
+/** Abre em hoje, ou no dia indicado por uma notificação ("/?date=YYYY-MM-DD"). */
 function initialCalendar(): CalendarState {
   const now = new Date();
   const param = new URLSearchParams(window.location.search).get("date");
@@ -44,21 +44,21 @@ function initialCalendar(): CalendarState {
   return { month: new Date(day.getFullYear(), day.getMonth(), 1), selected: day };
 }
 
-/** Agenda message when there are stars but reminders cannot arrive. */
+/** Mensagem da agenda quando há estrelas mas os avisos não podem chegar. */
 function getNotificationHint(push: PushControls): string | null {
   if (push.syncError) return push.syncError;
   if (push.status === "on" || push.status === "loading") return null;
   if (push.message) return push.message;
   if (push.status === "ios-not-installed")
-    return "To get reminders on iPhone, install the app: tap Share, then Add to Home Screen.";
+    return "Para receberes avisos no iPhone, instala a app: toca em Partilhar e depois em Adicionar ao ecrã principal.";
   if (push.status === "denied")
-    return "Notifications are blocked. Allow them for this site in your phone or browser settings.";
-  if (push.status === "unsupported") return "This browser does not support notifications.";
-  return "Reminders are off. You can turn them on in Filters.";
+    return "As notificações estão bloqueadas. Ativa-as nas definições do telemóvel ou do browser para este site.";
+  if (push.status === "unsupported") return "Este browser não suporta notificações.";
+  return "Os avisos estão desligados. Podes ligá-los nos filtros.";
 }
 
-// This component only renders in the browser: the page shows the skeleton until the
-// data arrives, so window and localStorage are safe to use right away.
+// Este componente só é desenhado no browser: a página mostra o esqueleto até os dados
+// chegarem, por isso window e localStorage podem ser usados logo.
 export function EventCalendar({ events }: { events: CalendarEvent[] }) {
   const [calendar, setCalendar] = useState<CalendarState>(initialCalendar);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -68,7 +68,7 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
   const { starred, starredSet, toggleStar } = useStarred();
   const push = usePushNotifications(starred);
 
-  // Starring turns reminders on. The permission request must come directly from the tap.
+  // Dar uma estrela liga os avisos. O pedido de permissão tem de vir diretamente do toque.
   const { enableFromStar } = push;
   const handleToggleStar = useCallback(
     (id: string) => {
@@ -79,7 +79,7 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
     [starredSet, toggleStar, enableFromStar],
   );
 
-  // Change month by swiping
+  // Mudar de mês ao deslizar
   const changeMonth = useCallback((delta: number) => {
     setCalendar((prev) => {
       const next = new Date(prev.month.getFullYear(), prev.month.getMonth() + delta, 1);
@@ -98,7 +98,7 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
   }, []);
   const closeFilters = useCallback(() => setIsFilterOpen(false), []);
 
-  // Events to show
+  // Eventos a mostrar
   const filteredEvents = useMemo(
     () => filterEvents(events, filters.years, filters.subjects),
     [events, filters.years, filters.subjects],
@@ -109,8 +109,8 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
   );
   const hasDayEvents = dayEvents.length > 0;
 
-  // Keeps the last day with events, so the content does not vanish suddenly
-  // while the agenda animates closed.
+  // Guarda o último dia com eventos, para o conteúdo não desaparecer de repente
+  // enquanto a agenda fecha com a animação.
   const [lastAgenda, setLastAgenda] = useState<{ date: Date; events: CalendarEvent[] } | null>(null);
   if (hasDayEvents && lastAgenda?.events !== dayEvents) {
     setLastAgenda({ date: selected, events: dayEvents });
@@ -127,7 +127,7 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
         />
       </div>
 
-      {/* Calendar */}
+      {/* Calendário */}
       <div
         style={{ flexGrow: 3 }}
         className="basis-0 min-h-0 flex flex-col bg-card rounded-3xl border border-border shadow-sm overflow-hidden select-none touch-pan-y"
@@ -144,7 +144,7 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
         </div>
       </div>
 
-      {/* Day agenda: always mounted, and opens or closes with an animation */}
+      {/* Agenda do dia: sempre montada, abre e fecha com uma animação */}
       <div
         style={{ flexGrow: hasDayEvents ? 1 : 0 }}
         aria-hidden={!hasDayEvents}

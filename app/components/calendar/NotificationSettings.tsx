@@ -1,6 +1,6 @@
 "use client";
-// Reminders switch at the top of the filters. Reminders turn on by themselves
-// when a test is starred; this is where they can be turned off.
+// Interruptor dos avisos no topo dos filtros. Os avisos ligam-se sozinhos ao
+// dar uma estrela a um teste; é aqui que se podem desligar.
 import type { PushControls } from "@/hooks/usePushNotifications";
 
 interface Props {
@@ -24,27 +24,27 @@ export function NotificationSettings({ push }: Props) {
     case "ios-not-installed":
       description = (
         <>
-          On iPhone, install the app first: tap <b>Share</b>, then <b>Add to Home Screen</b>, and open it from the icon.
+          No iPhone, instala primeiro a app: toca em <b>Partilhar</b>, depois em <b>Adicionar ao ecrã principal</b>, e abre-a a partir do ícone.
         </>
       );
       break;
     case "unsupported":
-      description = "This browser does not support notifications. Try Chrome, Edge or Firefox.";
+      description = "Este browser não suporta notificações. Experimenta o Chrome, Edge ou Firefox.";
       break;
     case "denied":
-      description = "You blocked notifications. To allow them, change the permission in your browser or phone settings.";
+      description = "Bloqueaste as notificações. Para as ativar, muda a permissão nas definições do browser ou do telemóvel.";
       break;
     case "on":
       description = (
         <>
-          You get a reminder <b>every day at 10:00</b> for starred tests, from one week before
-          until the day of the test.
+          Recebes um aviso <b>todos os dias às 10h</b> dos testes com estrela, desde uma semana antes
+          até ao dia do teste.
         </>
       );
       break;
     default:
       description =
-        "Off. Turn them on to get a reminder every day at 10:00 for starred tests, from one week before.";
+        "Desligados. Liga-os para receberes um aviso todos os dias às 10h dos testes com estrela, desde uma semana antes.";
   }
 
   const canToggle = status === "on" || status === "off";
@@ -55,13 +55,13 @@ export function NotificationSettings({ push }: Props) {
         <span className={status === "on" ? "text-accent" : "text-muted-foreground"}>
           <BellIcon />
         </span>
-        <span className="flex-1 font-bold text-foreground">Test reminders</span>
+        <span className="flex-1 font-bold text-foreground">Avisos dos testes</span>
 
         {canToggle && (
           <button
             role="switch"
             aria-checked={status === "on"}
-            aria-label="Test reminders"
+            aria-label="Avisos dos testes"
             disabled={busy}
             onClick={status === "on" ? disable : enable}
             className={`relative w-11 h-6 shrink-0 rounded-full transition-colors disabled:opacity-50 ${

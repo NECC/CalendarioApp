@@ -1,4 +1,4 @@
-// Base structure of every page: PWA metadata and global components.
+// Estrutura base de todas as páginas: metadados da PWA e componentes globais.
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { InstallPrompt } from "@/app/components/InstallPrompt";
@@ -6,14 +6,14 @@ import { OfflineBanner } from "@/app/components/OfflineBanner";
 import { RegisterSW } from "@/app/components/RegisterSW";
 
 export const metadata: Metadata = {
-  title: "NECC Calendar",
-  description: "Calendar of LCC tests, submissions and events.",
+  title: "NECC Calendário",
+  description: "Calendário de testes, entregas e eventos de LCC.",
   manifest: "/manifest.json",
-  applicationName: "NECC Calendar",
-  // Name and icon when the app is installed on iPhone.
+  applicationName: "NECC Calendário",
+  // Nome e ícone quando a app está instalada no iPhone.
   appleWebApp: {
     capable: true,
-    title: "NECCalendar",
+    title: "NECCalendário",
     statusBarStyle: "default",
   },
   icons: {
@@ -35,7 +35,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-PT">
       <body>
         <RegisterSW />
         <OfflineBanner />

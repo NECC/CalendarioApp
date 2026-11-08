@@ -1,5 +1,5 @@
 "use client";
-// Home page: fetches the tests and shows the calendar.
+// Página inicial: vai buscar os testes e mostra o calendário.
 import { useEffect, useState } from "react";
 import { CalendarSkeleton } from "@/app/components/calendar/CalendarSkeleton";
 import { EventCalendar } from "@/app/components/calendar/EventCalendar";
@@ -13,7 +13,7 @@ export default function Home() {
     async function loadEvents() {
       try {
         const res = await fetch("/api/calendar");
-        if (!res.ok) throw new Error("Failed to load data");
+        if (!res.ok) throw new Error("Falha ao carregar os dados");
         const data = await res.json();
         setEvents(data.events ?? []);
       } catch (error) {

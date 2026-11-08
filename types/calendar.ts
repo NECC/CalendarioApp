@@ -1,10 +1,10 @@
-/** A test, submission or event in the calendar. */
+/** Um teste, entrega ou evento do calendário. */
 export interface CalendarEvent {
-  /** Stable ID, used to save stars. */
+  /** ID estável, usado para guardar as estrelas. */
   id: string;
   title: string;
-  /** Local date and time. The list has no real times, so only the date is used. */
+  /** Data e hora locais. A lista não tem horas reais, por isso só se usa a data. */
   startTimestampnz: string;
-  /** "ano1", "ano2", "ano3" or "eventos". */
+  /** "ano1", "ano2", "ano3" ou "eventos". */
   category: string;
 }

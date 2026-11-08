@@ -1,5 +1,5 @@
 "use client";
-// Filters panel that slides up from the bottom. Includes the reminders switch.
+// Painel de filtros que sobe a partir de baixo. Inclui o interruptor dos avisos.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NotificationSettings } from "@/app/components/calendar/NotificationSettings";
 import type { PushControls } from "@/hooks/usePushNotifications";
@@ -9,34 +9,34 @@ import { SUBJECTS_DATA } from "@/lib/subjects";
 const YEARS = [
   {
     year: 1,
-    label: "Year 1",
-    allLabel: "All of year 1",
+    label: "1º Ano",
+    allLabel: "Todo o 1º ano",
     color: CATEGORY_COLORS.ano1,
   },
   {
     year: 2,
-    label: "Year 2",
-    allLabel: "All of year 2",
+    label: "2º Ano",
+    allLabel: "Todo o 2º ano",
     color: CATEGORY_COLORS.ano2,
   },
   {
     year: 3,
-    label: "Year 3",
-    allLabel: "All of year 3",
+    label: "3º Ano",
+    allLabel: "Todo o 3º ano",
     color: CATEGORY_COLORS.ano3,
   },
   {
     year: 0,
-    label: "General events",
-    allLabel: "All general events",
+    label: "Eventos Gerais",
+    allLabel: "Todos os eventos gerais",
     color: CATEGORY_COLORS.eventos,
   },
 ];
 
 interface FilterSheetProps {
-  /** Whole years selected (0 = general events). */
+  /** Anos inteiros selecionados (0 = eventos gerais). */
   years: number[];
-  /** Codes of the selected subjects, from any year. */
+  /** Códigos das UCs selecionadas, de qualquer ano. */
   subjects: string[];
   resultCount: number;
   onToggleYear: (year: number) => void;
@@ -70,7 +70,7 @@ function Chevron({
   );
 }
 
-/** Opens and closes with a height animation (grid 0fr to 1fr), without measuring pixels. */
+/** Abre e fecha com animação de altura (grid 0fr para 1fr), sem medir pixéis. */
 function Collapsible({
   open,
   children,
@@ -131,7 +131,7 @@ export function FilterSheet({
   onClose,
   push,
 }: FilterSheetProps) {
-  // Years with a selection start open.
+  // Os anos com alguma seleção começam abertos.
   const [expandedYears, setExpandedYears] = useState<number[]>(() =>
     YEARS.map((y) => y.year).filter(
       (y) =>
@@ -146,7 +146,7 @@ export function FilterSheet({
   ]);
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  // When closing, animate out first and only then remove the panel.
+  // Ao fechar, primeiro faz a animação de saída e só depois remove o painel.
   const [shown, setShown] = useState(false);
   const closingRef = useRef(false);
   const closeTimer = useRef<number | null>(null);
@@ -194,7 +194,7 @@ export function FilterSheet({
       className="fixed inset-0 z-[100] flex flex-col justify-end"
       role="dialog"
       aria-modal="true"
-      aria-label="Filters"
+      aria-label="Filtros"
     >
       <div
         className={`absolute inset-0 bg-black/60 transition-opacity duration-300 motion-reduce:transition-none ${
@@ -210,7 +210,7 @@ export function FilterSheet({
       >
         <div className="flex justify-between items-center p-6 border-b border-border/50 bg-background z-20 rounded-t-3xl">
           <h3 className="text-xl font-extrabold text-foreground tracking-tight">
-            Filters
+            Filtros
           </h3>
           <div className="flex items-center gap-2">
             <button
@@ -221,12 +221,12 @@ export function FilterSheet({
                 hasFilters ? "opacity-100" : "opacity-0 pointer-events-none"
               }`}
             >
-              Clear
+              Limpar
             </button>
             <button
               ref={closeRef}
               onClick={requestClose}
-              aria-label="Close filters"
+              aria-label="Fechar filtros"
               className="w-8 h-8 flex items-center justify-center rounded-full bg-muted/20 text-foreground hover:bg-muted/40 transition-colors"
             >
               <svg
@@ -284,7 +284,7 @@ export function FilterSheet({
                     <span className="font-bold text-foreground">{label}</span>
                     {(wholeYear || pickedCount > 0) && (
                       <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-accent/15 text-accent animate-in fade-in zoom-in-90 duration-200">
-                        {wholeYear ? "All" : pickedCount}
+                        {wholeYear ? "Todas" : pickedCount}
                       </span>
                     )}
                   </div>
@@ -324,7 +324,7 @@ export function FilterSheet({
                               className="w-full flex items-center justify-between py-2 text-sm font-semibold"
                             >
                               <span className="text-muted-foreground">
-                                Semester {sem}
+                                {sem}º Semestre
                               </span>
                               <Chevron
                                 open={semOpen}
@@ -351,7 +351,7 @@ export function FilterSheet({
             onClick={requestClose}
             className="w-full mt-6 mb-4 h-12 shrink-0 bg-foreground text-background rounded-xl font-bold text-[15px] hover:opacity-90 active:scale-95 transition-transform"
           >
-            Show {resultCount} {resultCount === 1 ? "event" : "events"}
+            Ver {resultCount} {resultCount === 1 ? "evento" : "eventos"}
           </button>
         </div>
       </div>

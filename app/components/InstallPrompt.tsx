@@ -1,6 +1,6 @@
 "use client";
-// Invitation to install the app. Android and Chrome/Edge have their own install
-// prompt. The iPhone does not, so it shows instructions instead.
+// Convite para instalar a app. O Android e o Chrome/Edge têm o seu próprio pedido
+// de instalação. O iPhone não tem, por isso mostra as instruções.
 
 import { useEffect, useState } from "react";
 import { isInstalled, isIOS } from "@/lib/device";
@@ -65,14 +65,14 @@ export function InstallPrompt() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/icons/necc-icon-192.png" alt="" className="w-10 h-10 rounded-xl" />
       <div className="flex-1 min-w-0">
-        <p className="font-semibold">Install NECC Calendar</p>
+        <p className="font-semibold">Instala o NECC Calendário</p>
         {showIOS ? (
           <p className="text-xs opacity-70">
-            Tap <b>Share</b>, then{" "}
-            <b>Add to Home Screen</b> to get test reminders.
+            Toca em <b>Partilhar</b> e depois em{" "}
+            <b>Adicionar ao ecrã principal</b> para receberes avisos dos testes.
           </p>
         ) : (
-          <p className="text-xs opacity-70">Quick access and reminders for your tests.</p>
+          <p className="text-xs opacity-70">Acesso rápido e avisos dos teus testes.</p>
         )}
       </div>
       {!showIOS && (
@@ -80,10 +80,10 @@ export function InstallPrompt() {
           onClick={install}
           className="shrink-0 bg-accent text-background font-semibold rounded-full px-3 py-1.5"
         >
-          Install
+          Instalar
         </button>
       )}
-      <button onClick={dismiss} aria-label="Close" className="shrink-0 opacity-60 px-1 text-lg leading-none">
+      <button onClick={dismiss} aria-label="Fechar" className="shrink-0 opacity-60 px-1 text-lg leading-none">
         ×
       </button>
     </div>
