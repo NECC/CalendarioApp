@@ -13,16 +13,17 @@ import { recordCronRun } from "@/lib/push/store";
 
 /**
  * Devolve o motivo da recusa, ou null se o pedido for válido.
- * A Vercel envia "Authorization: Bearer"; os agendadores externos podem usar "X-Cron-Secret".
+ * A Vercel envia "Authorization: Bearer". O agendador externo envia ?secret= no URL,
+ * porque os headers configurados no cron-job.org não chegavam ao servidor.
  */
 function refusalReason(request: NextRequest): string | null {
   const secret = process.env.CRON_SECRET;
   if (!secret) return "falta CRON_SECRET no servidor";
 
   const authorization = request.headers.get("authorization");
-  const cronSecret = request.headers.get("x-cron-secret");
-  if (authorization === `Bearer ${secret}` || cronSecret === secret) return null;
-  return authorization || cronSecret ? "segredo errado" : "pedido sem header de autenticação";
+  const urlSecret = request.nextUrl.searchParams.get("secret");
+  if (authorization === `Bearer ${secret}` || urlSecret === secret) return null;
+  return authorization || urlSecret ? "segredo errado" : "pedido sem segredo";
 }
 
 export async function GET(request: NextRequest) {
