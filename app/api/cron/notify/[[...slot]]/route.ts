@@ -11,12 +11,25 @@ import { NextResponse, type NextRequest } from "next/server";
 import { lisbonHour, runNotifications, SEND_HOUR } from "@/lib/push/notify";
 import { recordCronRun } from "@/lib/push/store";
 
-export async function GET(request: NextRequest) {
-  // A Vercel envia este segredo, para mais ninguém poder disparar os avisos.
+/**
+ * Devolve o motivo da recusa, ou null se o pedido for válido.
+ * A Vercel envia "Authorization: Bearer"; os agendadores externos podem usar "X-Cron-Secret".
+ */
+function refusalReason(request: NextRequest): string | null {
   const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
-    console.error("[cron] pedido recusado:", secret ? "segredo errado" : "falta CRON_SECRET");
-    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (!secret) return "falta CRON_SECRET no servidor";
+
+  const authorization = request.headers.get("authorization");
+  const cronSecret = request.headers.get("x-cron-secret");
+  if (authorization === `Bearer ${secret}` || cronSecret === secret) return null;
+  return authorization || cronSecret ? "segredo errado" : "pedido sem header de autenticação";
+}
+
+export async function GET(request: NextRequest) {
+  const refusal = refusalReason(request);
+  if (refusal) {
+    console.error("[cron] pedido recusado:", refusal);
+    return NextResponse.json({ error: "Não autorizado", reason: refusal }, { status: 401 });
   }
 
   const at = new Date().toISOString();
