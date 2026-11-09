@@ -5,6 +5,9 @@
 //  1. Dar uma estrela a um teste pede permissão e regista o dispositivo no servidor.
 //  2. Sempre que as estrelas mudam, o servidor recebe a nova lista.
 //  3. Às 10h, o servidor envia os avisos, mesmo com a app fechada.
+//
+// Sem internet nada disto se nota: as estrelas ficam em fila e são enviadas quando a
+// ligação voltar, pela app ou (no Android) pelo service worker, mesmo com a app fechada.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getVapidPublicKey, subscribeUser, unsubscribeUser, updateStarred } from "@/app/actions";
 import { isInstalled, isIOS } from "@/lib/device";
@@ -20,6 +23,9 @@ export type PushStatus =
 const OPT_OUT_KEY = "necc-push-off";
 const SYNC_DELAY_MS = 600;
 const SERVICE_WORKER_TIMEOUT_MS = 8000;
+// Os mesmos nomes que em public/sw.js.
+const PENDING_CACHE = "necc-pending";
+const PENDING_STARS_URL = "/__pending-stars";
 
 // ---- Preferência "desliguei os avisos": as estrelas deixam de os ligar ----
 
@@ -52,6 +58,33 @@ function serviceWorkerReady(): Promise<ServiceWorkerRegistration> {
       setTimeout(() => reject(new Error("SW_TIMEOUT")), SERVICE_WORKER_TIMEOUT_MS),
     ),
   ]);
+}
+
+/** O erro veio de não haver ligação, e não de um problema real. */
+function isConnectionError(err: unknown) {
+  return !navigator.onLine || (err instanceof TypeError && /fetch|network|load failed/i.test(err.message));
+}
+
+/** Guarda as estrelas e pede ao browser para avisar o service worker quando houver rede. */
+async function queueStars(starred: string[]) {
+  try {
+    const cache = await caches.open(PENDING_CACHE);
+    await cache.put(PENDING_STARS_URL, new Response(JSON.stringify(starred)));
+    const reg = (await serviceWorkerReady()) as ServiceWorkerRegistration & {
+      sync?: { register(tag: string): Promise<void> }; // só existe em alguns browsers
+    };
+    await reg.sync?.register("sync-stars");
+  } catch (err) {
+    // Nos outros browsers, ou se isto falhar, a app envia as estrelas quando voltar a abrir.
+    console.warn("[push] estrelas não ficaram em fila:", err);
+  }
+}
+
+async function clearQueuedStars() {
+  try {
+    const cache = await caches.open(PENDING_CACHE);
+    await cache.delete(PENDING_STARS_URL);
+  } catch {}
 }
 
 /** A chave VAPID vem em texto (base64url), mas o browser quer bytes. */
@@ -129,9 +162,10 @@ export function usePushNotifications(starred: string[]) {
       } else {
         try {
           const reg = await serviceWorkerReady();
-          const key = await getVapidPublicKey();
-          vapidKey.current = key;
           sub = await reg.pushManager.getSubscription();
+          // Sem internet a chave não chega, mas a subscrição já é conhecida.
+          const key = await getVapidPublicKey().catch(() => null);
+          vapidKey.current = key;
           if (sub && key && Notification.permission === "granted") {
             sub = await getOrCreateSubscription(reg, keyToBytes(key));
           }
@@ -154,18 +188,27 @@ export function usePushNotifications(starred: string[]) {
 
   // Envia as estrelas para o servidor quando mudam, com um pequeno atraso para agrupar
   // vários toques. Repete ao sair e voltar à app, caso a app tenha sido fechada
-  // logo depois de dar a estrela.
+  // logo depois de dar a estrela, e quando a internet volta.
   const starredKey = JSON.stringify(starred);
   useEffect(() => {
     if (!subscription) return;
     const sync = async () => {
+      const current: string[] = JSON.parse(starredKey);
+      if (!navigator.onLine) {
+        await queueStars(current);
+        return;
+      }
       try {
-        const current = JSON.parse(starredKey);
         const updated = await updateStarred(subscription.endpoint, current);
         // Se o servidor não conhecer este dispositivo, regista-o outra vez.
         const result = updated.success ? updated : await subscribeUser(subscription.toJSON(), current);
         setSyncError(result.success ? null : result.error);
+        if (result.success) await clearQueuedStars();
       } catch (err) {
+        if (isConnectionError(err)) {
+          await queueStars(current);
+          return;
+        }
         // Também acontece quando uma versão antiga da app fica aberta depois de um deploy.
         console.error("[push] falha ao sincronizar:", err);
         setSyncError("Não foi possível guardar as estrelas no servidor. Fecha e volta a abrir a app.");
@@ -173,9 +216,11 @@ export function usePushNotifications(starred: string[]) {
     };
     const timer = setTimeout(sync, SYNC_DELAY_MS);
     document.addEventListener("visibilitychange", sync);
+    window.addEventListener("online", sync);
     return () => {
       clearTimeout(timer);
       document.removeEventListener("visibilitychange", sync);
+      window.removeEventListener("online", sync);
     };
   }, [subscription, starredKey]);
 
@@ -194,6 +239,13 @@ export function usePushNotifications(starred: string[]) {
         return;
       }
 
+      // A permissão não precisa de internet, mas o registo sim: fica para quando voltar.
+      if (!navigator.onLine) {
+        permissionAsked.current = false;
+        setStatus((s) => (s === "loading" ? "off" : s));
+        return;
+      }
+
       // O Safari exige que a subscrição venha de um toque. Uma ida ao servidor
       // aqui podia fazer perder esse toque, por isso a chave já vem da abertura.
       const key = vapidKey.current ?? (await getVapidPublicKey());
@@ -206,8 +258,11 @@ export function usePushNotifications(starred: string[]) {
       setSubscription(sub);
       setStatus("on");
     } catch (err) {
-      console.error("[push] falha ao ativar:", err);
-      setMessage(explainError(err));
+      if (isConnectionError(err)) permissionAsked.current = false;
+      else {
+        console.error("[push] falha ao ativar:", err);
+        setMessage(explainError(err));
+      }
       setStatus((s) => (s === "loading" ? "off" : s));
     } finally {
       activating.current = false;
@@ -233,8 +288,15 @@ export function usePushNotifications(starred: string[]) {
   useEffect(() => {
     if (status !== "off" || !hasStars || isOptedOut()) return;
     if (Notification.permission === "granted" && !isIOS()) {
-      const timer = setTimeout(activate, 0);
-      return () => clearTimeout(timer);
+      const run = () => {
+        if (navigator.onLine) activate();
+      };
+      const timer = setTimeout(run, 0);
+      window.addEventListener("online", run);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener("online", run);
+      };
     }
     if (permissionAsked.current) return;
     document.addEventListener("click", activate, { once: true });
@@ -248,7 +310,8 @@ export function usePushNotifications(starred: string[]) {
     setOptedOut(true);
     try {
       await subscription.unsubscribe();
-      await unsubscribeUser(subscription.endpoint);
+      // Sem internet o servidor fica a saber no próximo envio, quando o dispositivo já não existir.
+      await unsubscribeUser(subscription.endpoint).catch(() => {});
       setSubscription(null);
       setStatus("off");
       setMessage(null);
