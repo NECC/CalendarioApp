@@ -67,6 +67,10 @@ export function DayAgenda({
 }: DayAgendaProps) {
   const showHint = Boolean(notificationHint) && events.some((e) => starredIds.has(e.id));
 
+  // Dias antes de hoje não têm estrela: já não há avisos para receber.
+  const now = new Date();
+  const isPastDay = selectedDate < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
   // "7 Novembro 2026"
   const headerText = selectedDate
     .toLocaleDateString("pt-PT", {
@@ -103,7 +107,8 @@ export function DayAgenda({
               <div
                 key={event.id}
                 title={event.title}
-                className="shrink-0 flex items-center gap-3 px-3.5 py-3 rounded-2xl"
+                // A altura mínima mantém as linhas iguais com e sem estrela.
+                className="shrink-0 flex items-center gap-3 px-3.5 py-3 min-h-13 rounded-2xl"
                 style={{
                   backgroundColor: `color-mix(in srgb, ${color} 16%, transparent)`,
                   color: `color-mix(in srgb, ${color} 70%, var(--foreground))`,
@@ -111,11 +116,13 @@ export function DayAgenda({
               >
                 <CategoryIcon category={event.category} />
                 <p className="min-w-0 flex-1 truncate text-sm font-semibold">{event.title}</p>
-                <StarButton
-                  event={event}
-                  active={starredIds.has(event.id)}
-                  onToggle={() => onToggleStar(event.id)}
-                />
+                {!isPastDay && (
+                  <StarButton
+                    event={event}
+                    active={starredIds.has(event.id)}
+                    onToggle={() => onToggleStar(event.id)}
+                  />
+                )}
               </div>
             );
           })

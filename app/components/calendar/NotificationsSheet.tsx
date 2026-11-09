@@ -1,5 +1,5 @@
 "use client";
-// Painel dos avisos: o interruptor e todos os testes com estrela, por ordem de data.
+// Painel dos avisos: o interruptor e os testes com estrela que ainda vão acontecer, por ordem de data.
 import { useMemo } from "react";
 import { BottomSheet, useCloseSheet } from "@/app/components/calendar/BottomSheet";
 import { NotificationSettings } from "@/app/components/calendar/NotificationSettings";
@@ -40,14 +40,12 @@ function StarredRow({
   event,
   date,
   label,
-  past,
   onSelect,
   onUnstar,
 }: {
   event: CalendarEvent;
   date: Date;
   label: string;
-  past: boolean;
   onSelect: (date: Date) => void;
   onUnstar: () => void;
 }) {
@@ -55,9 +53,7 @@ function StarredRow({
   const close = useCloseSheet();
   return (
     <div
-      className={`shrink-0 flex items-center gap-3 pl-3.5 pr-2.5 py-3 rounded-2xl transition-opacity ${
-        past ? "opacity-50" : ""
-      }`}
+      className="shrink-0 flex items-center gap-3 pl-3.5 pr-2.5 py-3 rounded-2xl"
       style={{
         backgroundColor: `color-mix(in srgb, ${color} 16%, transparent)`,
         color: `color-mix(in srgb, ${color} 70%, var(--foreground))`,
@@ -95,31 +91,15 @@ export function NotificationsSheet({
   onClose,
   push,
 }: NotificationsSheetProps) {
-  const { upcoming, past, today } = useMemo(() => {
+  const { upcoming, today } = useMemo(() => {
     const today = startOfDay(new Date());
-    const starred = events
+    const upcoming = events
       .filter((e) => starredIds.has(e.id))
       .map((event) => ({ event, date: new Date(event.startTimestampnz) }))
+      .filter((s) => s.date >= today)
       .sort((a, b) => a.date.getTime() - b.date.getTime());
-    return {
-      today,
-      upcoming: starred.filter((s) => s.date >= today),
-      // Os já passados ficam no fim, do mais recente para o mais antigo.
-      past: starred.filter((s) => s.date < today).reverse(),
-    };
+    return { upcoming, today };
   }, [events, starredIds]);
-
-  const renderRow = ({ event, date }: { event: CalendarEvent; date: Date }, isPast: boolean) => (
-    <StarredRow
-      key={event.id}
-      event={event}
-      date={date}
-      label={formatDate(date, today)}
-      past={isPast}
-      onSelect={onSelectDate}
-      onUnstar={() => onToggleStar(event.id)}
-    />
-  );
 
   return (
     <BottomSheet title="Avisos" onClose={onClose}>
@@ -127,7 +107,7 @@ export function NotificationsSheet({
 
       <h4 className="px-1 mb-2 text-sm font-semibold text-muted-foreground">Testes com estrela</h4>
 
-      {upcoming.length === 0 && past.length === 0 ? (
+      {upcoming.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
           <StarIcon className="w-6 h-6 opacity-60" />
           <p className="text-sm max-w-[16rem]">
@@ -136,17 +116,16 @@ export function NotificationsSheet({
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {upcoming.length === 0 && (
-            <p className="text-sm text-muted-foreground py-2 px-1">Sem testes por vir.</p>
-          )}
-          {upcoming.map((s) => renderRow(s, false))}
-
-          {past.length > 0 && (
-            <>
-              <h4 className="px-1 mt-4 text-sm font-semibold text-muted-foreground">Já passaram</h4>
-              {past.map((s) => renderRow(s, true))}
-            </>
-          )}
+          {upcoming.map(({ event, date }) => (
+            <StarredRow
+              key={event.id}
+              event={event}
+              date={date}
+              label={formatDate(date, today)}
+              onSelect={onSelectDate}
+              onUnstar={() => onToggleStar(event.id)}
+            />
+          ))}
         </div>
       )}
     </BottomSheet>

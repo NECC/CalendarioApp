@@ -69,7 +69,7 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
   const { month, selected } = calendar;
 
   const filters = useEventFilters();
-  const { starred, starredSet, toggleStar } = useStarred();
+  const { starred, starredSet, toggleStar } = useStarred(events);
   const push = usePushNotifications(starred);
 
   // Dar uma estrela liga os avisos. O pedido de permissão tem de vir diretamente do toque.
