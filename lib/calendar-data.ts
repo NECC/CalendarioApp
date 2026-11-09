@@ -15,7 +15,7 @@ interface RawItem {
 // e as estrelas são guardadas por ID. Mudá-los faria perder as estrelas guardadas.
 const RAW_DATA: Record<string, RawItem[]> = {
   ano1: [
-    { subject: "PF", day: "2026-10-22", type: "Teste" },
+    { subject: "PF", day: "2026-11-20", type: "Teste" },
     { subject: "TFM", day: "2026-11-05", type: "Teste" },
     { subject: "LP-I", day: "2026-11-09", type: "Entrega - (1ªParte)" },
     { subject: "Cálculo", day: "2026-11-08", type: "Teste" },
