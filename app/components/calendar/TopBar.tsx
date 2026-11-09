@@ -1,9 +1,9 @@
-// Barra de topo: nome do mês e botões dos avisos e dos filtros.
-import Image from "next/image";
+// Barra de topo: mês e ano, e botões dos avisos e dos filtros.
 import { BellIcon } from "@/app/components/calendar/NotificationSettings";
 
 interface TopBarProps {
-  monthTitle: string;
+  monthName: string;
+  year: number;
   onOpenFilters: () => void;
   /** Número de filtros ativos, mostrado no botão. */
   activeFilterCount: number;
@@ -18,7 +18,8 @@ const COUNT_BADGE =
   "absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-[10px] font-bold text-white flex items-center justify-center";
 
 export function TopBar({
-  monthTitle,
+  monthName,
+  year,
   onOpenFilters,
   activeFilterCount,
   onOpenNotifications,
@@ -26,18 +27,10 @@ export function TopBar({
 }: TopBarProps) {
   return (
     <div className="flex items-center justify-between w-full px-1 shrink-0">
-      <div className="flex items-center h-10 bg-card border border-border rounded-full px-4 shadow-xs gap-2">
-        <Image
-          src="/icons/necc-icon.svg"
-          alt=""
-          width={22}
-          height={22}
-          unoptimized
-          className="w-[22px] h-[22px] object-contain rounded-sm"
-        />
-        <span className="text-foreground font-bold text-sm tracking-tight">
-          {monthTitle}
-        </span>
+      <div className="flex items-center h-10 bg-card border border-border rounded-full px-4 shadow-xs">
+        <h1 className="text-foreground font-bold text-sm tracking-tight uppercase">
+          {monthName} {year}
+        </h1>
       </div>
 
       <div className="flex items-center gap-2">
