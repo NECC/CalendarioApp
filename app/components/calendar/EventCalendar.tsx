@@ -48,6 +48,8 @@ function initialCalendar(): CalendarState {
 function getNotificationHint(push: PushControls): string | null {
   if (push.syncError) return push.syncError;
   if (push.status === "on" || push.status === "loading") return null;
+  // Sem internet os avisos ligam-se sozinhos quando a ligação voltar.
+  if (push.status === "off" && !navigator.onLine) return null;
   if (push.message) return push.message;
   if (push.status === "ios-not-installed")
     return "Para receberes avisos no iPhone, instala a app: toca em Partilhar e depois em Adicionar ao ecrã principal.";
