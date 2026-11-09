@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { DayAgenda } from "@/app/components/calendar/DayAgenda";
 import { FilterSheet } from "@/app/components/calendar/FilterSheet";
 import { MonthGrid } from "@/app/components/calendar/MonthGrid";
+import { NotificationsSheet } from "@/app/components/calendar/NotificationsSheet";
 import { TopBar } from "@/app/components/calendar/TopBar";
 import { useEventFilters } from "@/hooks/useEventFilters";
 import { usePushNotifications, type PushControls } from "@/hooks/usePushNotifications";
@@ -56,7 +57,7 @@ function getNotificationHint(push: PushControls): string | null {
   if (push.status === "denied")
     return "As notificações estão bloqueadas. Ativa-as nas definições do telemóvel ou do browser para este site.";
   if (push.status === "unsupported") return "Este browser não suporta notificações.";
-  return "Os avisos estão desligados. Podes ligá-los nos filtros.";
+  return "Os avisos estão desligados. Podes ligá-los no sino, no topo.";
 }
 
 // Este componente só é desenhado no browser: a página mostra o esqueleto até os dados
@@ -64,6 +65,7 @@ function getNotificationHint(push: PushControls): string | null {
 export function EventCalendar({ events }: { events: CalendarEvent[] }) {
   const [calendar, setCalendar] = useState<CalendarState>(initialCalendar);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { month, selected } = calendar;
 
   const filters = useEventFilters();
@@ -99,6 +101,19 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
     setCalendar((prev) => ({ ...prev, selected: date }));
   }, []);
   const closeFilters = useCallback(() => setIsFilterOpen(false), []);
+  const closeNotifications = useCallback(() => setIsNotificationsOpen(false), []);
+
+  /** Vindo da lista dos avisos: abre o mês desse dia e seleciona-o. */
+  const goToDate = useCallback((date: Date) => {
+    const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    setCalendar({ month: new Date(day.getFullYear(), day.getMonth(), 1), selected: day });
+  }, []);
+
+  const upcomingStarredCount = useMemo(() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return events.filter((e) => starredSet.has(e.id) && new Date(e.startTimestampnz) >= today).length;
+  }, [events, starredSet]);
 
   // Eventos a mostrar
   const filteredEvents = useMemo(
@@ -126,6 +141,8 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
           monthTitle={`${MONTHS[month.getMonth()]} ${month.getFullYear()}`}
           onOpenFilters={() => setIsFilterOpen(true)}
           activeFilterCount={filters.years.length + filters.subjects.length}
+          onOpenNotifications={() => setIsNotificationsOpen(true)}
+          upcomingStarredCount={upcomingStarredCount}
         />
       </div>
 
@@ -176,6 +193,16 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
           onToggleSubject={filters.toggleSubject}
           onClear={filters.clearFilters}
           onClose={closeFilters}
+        />
+      )}
+
+      {isNotificationsOpen && (
+        <NotificationsSheet
+          events={events}
+          starredIds={starredSet}
+          onToggleStar={toggleStar}
+          onSelectDate={goToDate}
+          onClose={closeNotifications}
           push={push}
         />
       )}

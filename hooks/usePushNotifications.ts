@@ -270,7 +270,7 @@ export function usePushNotifications(starred: string[]) {
     }
   }, []);
 
-  /** Interruptor dos filtros: ligar. */
+  /** Interruptor do painel dos avisos: ligar. */
   const enable = useCallback(() => {
     setOptedOut(false);
     return activate();
@@ -303,7 +303,7 @@ export function usePushNotifications(starred: string[]) {
     return () => document.removeEventListener("click", activate);
   }, [status, hasStars, activate]);
 
-  /** Interruptor dos filtros: desligar. */
+  /** Interruptor do painel dos avisos: desligar. */
   const disable = useCallback(async () => {
     if (!subscription) return;
     setBusy(true);
