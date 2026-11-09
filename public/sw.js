@@ -95,6 +95,8 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
   if (req.method !== "GET" || url.origin !== self.location.origin) return;
+  // A versão tem de vir sempre do servidor, nunca da cache.
+  if (url.pathname === "/api/version") return;
   event.respondWith(networkFirst(event, req));
 });
 
