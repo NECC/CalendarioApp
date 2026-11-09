@@ -10,6 +10,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { lisbonHour, runNotifications, SEND_HOUR } from "@/lib/push/notify";
 import { recordCronRun } from "@/lib/push/store";
+import { createHash, timingSafeEqual } from "node:crypto";
+
+/** Compara em tempo constante, para o tempo de resposta não revelar o segredo aos poucos. */
+function sameSecret(received: string | null, expected: string): boolean {
+  if (!received) return false;
+  const hash = (s: string) => createHash("sha256").update(s).digest();
+  return timingSafeEqual(hash(received), hash(expected));
+}
 
 /**
  * Devolve o motivo da recusa, ou null se o pedido for válido.
@@ -22,7 +30,7 @@ function refusalReason(request: NextRequest): string | null {
 
   const authorization = request.headers.get("authorization");
   const urlSecret = request.nextUrl.searchParams.get("secret");
-  if (authorization === `Bearer ${secret}` || urlSecret === secret) return null;
+  if (sameSecret(authorization, `Bearer ${secret}`) || sameSecret(urlSecret, secret)) return null;
   return authorization || urlSecret ? "segredo errado" : "pedido sem segredo";
 }
 
