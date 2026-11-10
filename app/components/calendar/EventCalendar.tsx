@@ -101,6 +101,19 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
     setCalendar((prev) => ({ ...prev, selected: date }));
   }, []);
   const closeFilters = useCallback(() => setIsFilterOpen(false), []);
+  // Ir para hoje
+  const goToToday = useCallback(() => {
+    const today = new Date();
+    setCalendar({
+      month: new Date(today.getFullYear(), today.getMonth(), 1),
+      selected: new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate(),
+      ),
+    });
+  }, []);
+
   const closeNotifications = useCallback(() => setIsNotificationsOpen(false), []);
 
   /** Vindo da lista dos avisos: abre o mês desse dia e seleciona-o. */
@@ -114,6 +127,7 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     return events.filter((e) => starredSet.has(e.id) && new Date(e.startTimestampnz) >= today).length;
   }, [events, starredSet]);
+
 
   // Eventos a mostrar
   const filteredEvents = useMemo(
@@ -142,6 +156,7 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
           year={month.getFullYear()}
           onOpenFilters={() => setIsFilterOpen(true)}
           activeFilterCount={filters.years.length + filters.subjects.length}
+          goToToday={goToToday}
           onOpenNotifications={() => setIsNotificationsOpen(true)}
           upcomingStarredCount={upcomingStarredCount}
         />
@@ -170,7 +185,7 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
         aria-hidden={!hasDayEvents}
         className={`basis-0 flex flex-col overflow-hidden transition-[flex-grow,min-height,margin,opacity] duration-300 ease-out motion-reduce:transition-none ${
           hasDayEvents
-            ? "min-h-[10rem] mt-4 opacity-100"
+            ? "min-h-40 mt-4 opacity-100"
             : "min-h-0 mt-0 opacity-0 pointer-events-none"
         }`}
       >

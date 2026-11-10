@@ -1,3 +1,5 @@
+// Barra de topo: nome do mês, botão de ir para hoje e botão dos filtros.
+import Image from "next/image";
 // Barra de topo: mês e ano, e botões dos avisos e dos filtros.
 import { BellIcon } from "@/app/components/calendar/NotificationSettings";
 
@@ -7,6 +9,7 @@ interface TopBarProps {
   onOpenFilters: () => void;
   /** Número de filtros ativos, mostrado no botão. */
   activeFilterCount: number;
+  goToToday: () => void;
   onOpenNotifications: () => void;
   /** Testes com estrela que ainda vão acontecer, mostrado no botão. */
   upcomingStarredCount: number;
@@ -24,14 +27,19 @@ export function TopBar({
   activeFilterCount,
   onOpenNotifications,
   upcomingStarredCount,
+  goToToday
 }: TopBarProps) {
   return (
     <div className="flex items-center justify-between w-full px-1 shrink-0">
-      <div className="flex items-center h-10 bg-card border border-border rounded-full px-4 shadow-xs">
+      <button
+        onClick={goToToday}
+        title="Ir para hoje"
+        aria-label="Ir para hoje"
+        className="flex items-center h-10 bg-card border border-border rounded-full px-4 shadow-xs">
         <h1 className="text-foreground font-bold text-sm tracking-tight uppercase">
           {monthName} {year}
         </h1>
-      </div>
+      </button>
 
       <div className="flex items-center gap-2">
       <button
