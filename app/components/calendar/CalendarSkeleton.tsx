@@ -2,7 +2,7 @@
 export function CalendarSkeleton() {
   return (
     <div
-      className="flex flex-col w-full h-dvh bg-background px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] gap-4 max-w-lg mx-auto animate-pulse overflow-hidden"
+      className="flex flex-col w-full h-dvh bg-background px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[max(1rem,env(safe-area-inset-bottom))] gap-4 max-w-lg mx-auto animate-pulse overflow-hidden"
       aria-busy="true"
       aria-label="A carregar o calendário"
     >

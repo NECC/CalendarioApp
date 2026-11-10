@@ -139,7 +139,7 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
   const agenda = hasDayEvents ? { date: selected, events: dayEvents } : lastAgenda;
 
   return (
-    <div className="flex flex-col w-full h-dvh bg-background text-foreground px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] max-w-lg mx-auto relative overflow-hidden">
+    <div className="flex flex-col w-full h-dvh bg-background text-foreground px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[max(1rem,env(safe-area-inset-bottom))] max-w-lg mx-auto relative overflow-hidden">
       <div className="shrink-0 mb-4">
         <TopBar
           monthName={MONTHS[month.getMonth()]}
