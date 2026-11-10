@@ -97,6 +97,18 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
     setCalendar((prev) => ({ ...prev, selected: date }));
   }, []);
   const closeFilters = useCallback(() => setIsFilterOpen(false), []);
+  // Ir para hoje
+  const goToToday = useCallback(() => {
+    const today = new Date();
+    setCalendar({
+      month: new Date(today.getFullYear(), today.getMonth(), 1),
+      selected: new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate(),
+      ),
+    });
+  }, []);
 
   // Eventos a mostrar
   const filteredEvents = useMemo(
@@ -124,6 +136,7 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
           monthTitle={`${MONTHS[month.getMonth()]} ${month.getFullYear()}`}
           onOpenFilters={() => setIsFilterOpen(true)}
           activeFilterCount={filters.years.length + filters.subjects.length}
+          goToToday={goToToday}
         />
       </div>
 
@@ -150,7 +163,7 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
         aria-hidden={!hasDayEvents}
         className={`basis-0 flex flex-col overflow-hidden transition-[flex-grow,min-height,margin,opacity] duration-300 ease-out motion-reduce:transition-none ${
           hasDayEvents
-            ? "min-h-[10rem] mt-4 opacity-100"
+            ? "min-h-40 mt-4 opacity-100"
             : "min-h-0 mt-0 opacity-0 pointer-events-none"
         }`}
       >
