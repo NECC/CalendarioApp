@@ -14,14 +14,36 @@ function cleanStarred(starred: unknown): string[] {
   return [...new Set(starred.filter((id) => VALID_EVENT_IDS.has(id)))].slice(0, MAX_STARS);
 }
 
+// Serviços de push dos browsers (Chrome/Android, Safari/iPhone, Firefox, Edge).
+// Sem esta lista, qualquer pessoa podia registar um URL seu e o servidor ia fazer
+// pedidos para lá todos os dias.
+const PUSH_SERVICE_HOSTS = ["googleapis.com", "push.apple.com", "mozilla.com", "notify.windows.com"];
+
+function isPushServiceUrl(endpoint: string): boolean {
+  try {
+    const url = new URL(endpoint);
+    return (
+      url.protocol === "https:" &&
+      PUSH_SERVICE_HOSTS.some((h) => url.hostname === h || url.hostname.endsWith(`.${h}`))
+    );
+  } catch {
+    return false;
+  }
+}
+
+// As chaves reais têm 87 (p256dh) e 22 (auth) caracteres; isto só trava lixo gigante.
+const MAX_KEY_LENGTH = 200;
+
 function cleanSubscription(s: unknown): PushSubscription | null {
   const sub = s as PushSubscription | undefined;
   if (
     typeof sub?.endpoint !== "string" ||
-    !sub.endpoint.startsWith("https://") ||
     sub.endpoint.length > 1000 ||
+    !isPushServiceUrl(sub.endpoint) ||
     typeof sub.keys?.p256dh !== "string" ||
-    typeof sub.keys?.auth !== "string"
+    typeof sub.keys?.auth !== "string" ||
+    sub.keys.p256dh.length > MAX_KEY_LENGTH ||
+    sub.keys.auth.length > MAX_KEY_LENGTH
   ) {
     return null;
   }

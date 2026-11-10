@@ -44,7 +44,7 @@
      x="0"
      y="0" />
   <rect
-     style="opacity:1;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-opacity:1"
+     style="display:none;opacity:1;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-opacity:1"
      id="rect26"
      width="512"
      height="512"

@@ -14,17 +14,11 @@
   ],
   "orientation": "any",
   "theme_color": "#008cca",
-  "background_color": "#ffffff",
+  "background_color": "#008cca",
   "categories": [
     "productivity"
   ],
   "icons": [
-    {
-      "src": "/icons/necc-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
     {
       "src": "/icons/necc-icon-192.png",
       "sizes": "192x192",
@@ -48,12 +42,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "/icons/necc-icon-monochrome.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "monochrome"
     },
     {
       "src": "/icons/necc-icon-192-monochrome.png",

@@ -1,8 +1,7 @@
 "use client";
-// Painel de filtros que sobe a partir de baixo. Inclui o interruptor dos avisos.
-import { useCallback, useEffect, useRef, useState } from "react";
-import { NotificationSettings } from "@/app/components/calendar/NotificationSettings";
-import type { PushControls } from "@/hooks/usePushNotifications";
+// Painel de filtros que sobe a partir de baixo.
+import { useState } from "react";
+import { BottomSheet, SheetCloseButton } from "@/app/components/calendar/BottomSheet";
 import { CATEGORY_COLORS } from "@/lib/category-colors";
 import { SUBJECTS_DATA } from "@/lib/subjects";
 
@@ -43,7 +42,6 @@ interface FilterSheetProps {
   onToggleSubject: (code: string) => void;
   onClear: () => void;
   onClose: () => void;
-  push: PushControls;
 }
 
 const toggleIn = <T,>(list: T[], item: T) =>
@@ -129,7 +127,6 @@ export function FilterSheet({
   onToggleSubject,
   onClear,
   onClose,
-  push,
 }: FilterSheetProps) {
   // Os anos com alguma seleção começam abertos.
   const [expandedYears, setExpandedYears] = useState<number[]>(() =>
@@ -144,109 +141,26 @@ export function FilterSheet({
     "2-1",
     "3-1",
   ]);
-  const closeRef = useRef<HTMLButtonElement>(null);
-
-  // Ao fechar, primeiro faz a animação de saída e só depois remove o painel.
-  const [shown, setShown] = useState(false);
-  const closingRef = useRef(false);
-  const closeTimer = useRef<number | null>(null);
-
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setShown(true));
-    return () => {
-      cancelAnimationFrame(id);
-      if (closeTimer.current) window.clearTimeout(closeTimer.current);
-    };
-  }, []);
-
-  const requestClose = useCallback(() => {
-    if (closingRef.current) return;
-    closingRef.current = true;
-    const reduce = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (reduce) {
-      onClose();
-      return;
-    }
-    setShown(false);
-    closeTimer.current = window.setTimeout(onClose, 300);
-  }, [onClose]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") requestClose();
-    };
-    document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    closeRef.current?.focus();
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [requestClose]);
-
   const hasFilters = years.length > 0 || subjects.length > 0;
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex flex-col justify-end"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Filtros"
+    <BottomSheet
+      title="Filtros"
+      onClose={onClose}
+      headerActions={
+        <button
+          onClick={onClear}
+          tabIndex={hasFilters ? 0 : -1}
+          aria-hidden={!hasFilters}
+          className={`text-sm font-semibold text-muted-foreground hover:text-foreground px-3 h-8 rounded-full transition-[color,opacity] duration-200 ${
+            hasFilters ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+        >
+          Limpar
+        </button>
+      }
     >
-      <div
-        className={`absolute inset-0 bg-black/60 transition-opacity duration-300 motion-reduce:transition-none ${
-          shown ? "opacity-100" : "opacity-0"
-        }`}
-        onClick={requestClose}
-        aria-hidden="true"
-      />
-      <div
-        className={`relative w-full max-w-lg mx-auto bg-background rounded-t-3xl border-t border-border shadow-2xl flex flex-col max-h-[85vh] transition-transform duration-300 ease-out motion-reduce:transition-none ${
-          shown ? "translate-y-0" : "translate-y-full"
-        }`}
-      >
-        <div className="flex justify-between items-center p-6 border-b border-border/50 bg-background z-20 rounded-t-3xl">
-          <h3 className="text-xl font-extrabold text-foreground tracking-tight">
-            Filtros
-          </h3>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onClear}
-              tabIndex={hasFilters ? 0 : -1}
-              aria-hidden={!hasFilters}
-              className={`text-sm font-semibold text-muted-foreground hover:text-foreground px-3 h-8 rounded-full transition-[color,opacity] duration-200 ${
-                hasFilters ? "opacity-100" : "opacity-0 pointer-events-none"
-              }`}
-            >
-              Limpar
-            </button>
-            <button
-              ref={closeRef}
-              onClick={requestClose}
-              aria-label="Fechar filtros"
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-muted/20 text-foreground hover:bg-muted/40 transition-colors"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6 pt-4 overflow-y-auto overscroll-contain flex flex-col">
-          <NotificationSettings push={push} />
-
+      <>
           {YEARS.map(({ year, label, allLabel, color }) => {
             const isExpanded = expandedYears.includes(year);
             const yearSubjects = SUBJECTS_DATA.filter((s) => s.year === year);
@@ -347,14 +261,12 @@ export function FilterSheet({
             );
           })}
 
-          <button
-            onClick={requestClose}
-            className="w-full mt-6 mb-4 h-12 shrink-0 bg-foreground text-background rounded-xl font-bold text-[15px] hover:opacity-90 active:scale-95 transition-transform"
+          <SheetCloseButton
+            className="w-full mt-6 h-12 shrink-0 bg-foreground text-background rounded-xl font-bold text-[15px] hover:opacity-90 active:scale-95 transition-transform"
           >
             Ver {resultCount} {resultCount === 1 ? "evento" : "eventos"}
-          </button>
-        </div>
-      </div>
-    </div>
+          </SheetCloseButton>
+      </>
+    </BottomSheet>
   );
 }
