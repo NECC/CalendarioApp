@@ -16,11 +16,8 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
   },
   icons: {
-    icon: [
-      { url: "/icons/necc-icon.svg", type: "image/svg+xml" },
-      { url: "/icons/necc-icon-192.png", sizes: "192x192", type: "image/png" },
-    ],
-    apple: [{ url: "/icons/necc-icon-192.png", sizes: "192x192" }],
+    icon: [{ url: "/icons/necc-icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/icons/apple-touch-icon-180.png", sizes: "180x180" }],
   },
   formatDetection: { telephone: false },
 };
