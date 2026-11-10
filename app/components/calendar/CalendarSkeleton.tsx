@@ -7,8 +7,11 @@ export function CalendarSkeleton() {
       aria-label="A carregar o calendário"
     >
       <div className="flex items-center justify-between w-full px-1 shrink-0">
-        <div className="h-10 w-48 rounded-full bg-muted/30" />
-        <div className="h-10 w-10 rounded-full bg-muted/30" />
+        <div className="h-10 w-40 rounded-full bg-muted/30" />
+        <div className="flex gap-2">
+          <div className="h-10 w-10 rounded-full bg-muted/30" />
+          <div className="h-10 w-10 rounded-full bg-muted/30" />
+        </div>
       </div>
 
       <div className="flex-[3_1_0%] min-h-0 bg-card rounded-3xl border border-border p-4 flex flex-col gap-3">
