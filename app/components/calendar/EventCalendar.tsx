@@ -109,6 +109,10 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
     setCalendar({ month: new Date(day.getFullYear(), day.getMonth(), 1), selected: day });
   }, []);
 
+  const goToday = useCallback(() => goToDate(new Date()), [goToDate]);
+  const now = new Date();
+  const isCurrentMonth = month.getFullYear() === now.getFullYear() && month.getMonth() === now.getMonth();
+
   const upcomingStarredCount = useMemo(() => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -144,6 +148,8 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
           activeFilterCount={filters.years.length + filters.subjects.length}
           onOpenNotifications={() => setIsNotificationsOpen(true)}
           upcomingStarredCount={upcomingStarredCount}
+          showToday={!isCurrentMonth}
+          onGoToday={goToday}
         />
       </div>
 

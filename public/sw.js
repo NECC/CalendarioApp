@@ -136,26 +136,17 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: data.body || "",
+    // O Chrome no Android mostra sempre um ícone grande à direita. Sem "icon" desenha
+    // a primeira letra do domínio (um "C"), por isso no Android vai uma imagem transparente.
     icon: "/icons/" + (isAndroid ? "android-blank-icon-192.png" : "necc-icon-192.png"),
+    // O Android só usa a transparência desta imagem: tem de ser branco sobre transparente.
     badge: "/icons/necc-icon-192-monochrome.png",
     data: { url: data.url || "/" },
     tag: data.tag,
     renotify: Boolean(data.tag),
   };
-  
-  event.waitUntil(
-    self.registration.showNotification(data.title || "NECC Calendário", {
-      body: data.body || "",
-      // O Chrome no Android mostra sempre um ícone grande à direita. Sem "icon",
-      // desenha a primeira letra do domínio (um "C"), por isso tem de ser o logo.
-      icon: "/icons/necc-icon-192.png",
-      // O Android só usa a transparência desta imagem: tem de ser branco sobre transparente.
-      badge: "/icons/necc-badge-96.png",
-      data: { url: data.url || "/" },
-      tag: data.tag,
-      renotify: Boolean(data.tag),
-    }),
-  );
+
+  event.waitUntil(self.registration.showNotification(data.title || "NECC Calendário", options));
 });
 
 // Tocar na notificação abre a app no dia do teste.
