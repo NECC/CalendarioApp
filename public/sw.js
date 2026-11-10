@@ -56,15 +56,23 @@ self.addEventListener("push", (event) => {
     data = { body: event.data ? event.data.text() : "" };
   }
 
+  const isAndroid = /Android/i.test(self.navigator?.userAgent || "");
+
+  const options = {
+    body: data.body || "",
+    /* Android só usa a badge e aplica o tema do material you */
+    badge: "/icons/necc-icon-192-monochrome.png",
+    data: { url: data.url || "/" },
+    tag: data.tag,
+    renotify: Boolean(data.tag),
+  };
+  if (!isAndroid) options.icon = "/icons/necc-icon-192.png";
+
   event.waitUntil(
-    self.registration.showNotification(data.title || "NECC Calendário", {
-      body: data.body || "",
-      icon: "/icons/necc-icon-192.png",
-      badge: "/icons/necc-icon-192-monochrome.png",
-      data: { url: data.url || "/" },
-      tag: data.tag,
-      renotify: Boolean(data.tag),
-    }),
+    self.registration.showNotification(
+      data.title || "NECC Calendário",
+      options,
+    ),
   );
 });
 
