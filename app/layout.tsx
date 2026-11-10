@@ -2,7 +2,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { InstallPrompt } from "@/app/components/InstallPrompt";
-import { OfflineBanner } from "@/app/components/OfflineBanner";
 import { RegisterSW } from "@/app/components/RegisterSW";
 
 export const metadata: Metadata = {
@@ -38,7 +37,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-PT">
       <body>
         <RegisterSW />
-        <OfflineBanner />
         <InstallPrompt />
         {children}
       </body>
