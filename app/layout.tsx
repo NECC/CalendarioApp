@@ -38,8 +38,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {/* O iOS 26 desfoca o topo das apps instaladas, por cima dos botões. Não o faz
             quando o topo do ecrã é uma faixa fixa, da largura toda e de cor sólida.
-            Não pode ter pointer-events-none: o iOS decide pelo elemento que recebe o toque. */}
-        <div aria-hidden="true" className="fixed top-0 inset-x-0 z-30 h-[env(safe-area-inset-top)] bg-background" />
+            Não pode ter pointer-events-none: o iOS decide pelo elemento que recebe o toque.
+            Tem de ter mais de 10px; no iOS 26.1 a safe area do topo pode ser 0, daí o mínimo
+            de 12px, que cabe no espaço de 1rem acima da barra de topo. */}
+        <div aria-hidden="true" className="fixed top-0 inset-x-0 z-30 h-[max(12px,env(safe-area-inset-top))] bg-background" />
         <RegisterSW />
         <InstallPrompt />
         {children}
