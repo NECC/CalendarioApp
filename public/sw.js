@@ -145,10 +145,15 @@ self.addEventListener("push", (event) => {
   if (!isAndroid) options.icon = "/icons/necc-icon-192.png";
 
   event.waitUntil(
-    self.registration.showNotification(
-      data.title || "NECC Calendário",
-      options,
-    ),
+    self.registration.showNotification(data.title || "NECC Calendário", {
+      body: data.body || "",
+      // Sem "icon": no Android aparecia como um segundo ícone, grande, à direita.
+      // Fica só o ícone pequeno. O Android só usa a transparência desta imagem: tem de ser branco sobre transparente.
+      badge: "/icons/necc-badge-96.png",
+      data: { url: data.url || "/" },
+      tag: data.tag,
+      renotify: Boolean(data.tag),
+    }),
   );
 });
 
