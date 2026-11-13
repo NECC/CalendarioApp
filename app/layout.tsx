@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { InstallPrompt } from "@/app/components/InstallPrompt";
 import { RegisterSW } from "@/app/components/RegisterSW";
+import { Haptics } from "@/app/components/Haptics";
 
 export const metadata: Metadata = {
   title: "NECC Calendário",
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             de 12px, que cabe no espaço de 1rem acima da barra de topo. */}
         <div aria-hidden="true" className="fixed top-0 inset-x-0 z-30 h-[max(12px,env(safe-area-inset-top))] bg-background" />
         <RegisterSW />
+        <Haptics />
         <InstallPrompt />
         {children}
       </body>
