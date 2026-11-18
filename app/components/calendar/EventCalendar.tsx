@@ -34,7 +34,7 @@ interface CalendarState {
   selected: Date;
 }
 
-/** Abre em hoje, ou no dia indicado por uma notificação ("/?date=YYYY-MM-DD"). */
+/** Abre em hoje, ou no dia indicado por uma notificação ("/calendario?date=YYYY-MM-DD"). */
 function initialCalendar(): CalendarState {
   const now = new Date();
   const param = new URLSearchParams(window.location.search).get("date");

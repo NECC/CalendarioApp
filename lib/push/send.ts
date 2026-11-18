@@ -51,7 +51,7 @@ function buildMessage(payload: PushPayload): string {
     notification: {
       title: payload.title,
       body: payload.body,
-      navigate: new URL(payload.url ?? "/", APP_URL).href,
+      navigate: new URL(payload.url ?? "/calendario", APP_URL).href,
       tag: payload.tag,
       lang: "pt-PT",
     },

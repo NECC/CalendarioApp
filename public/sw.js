@@ -12,7 +12,7 @@ const PENDING_STARS_URL = "/__pending-stars";
 const NETWORK_TIMEOUT_MS = 2000;
 
 // Sem isto, quem abre a app uma única vez não teria nada guardado para a abrir sem ligação.
-const APP_SHELL = ["/", "/api/calendar"];
+const APP_SHELL = ["/", "/calendario", "/api/calendar"];
 
 async function cacheUrls(urls) {
   const cache = await caches.open(CACHE);
@@ -64,7 +64,8 @@ async function fromCache(req) {
   const options = { ignoreVary: true, ignoreSearch: req.mode === "navigate" };
   const cached = await caches.match(req, options);
   if (cached || req.mode !== "navigate") return cached;
-  return caches.match("/", options);
+  // Uma página que não está guardada: abre o calendário (no browser, ele manda para "/").
+  return caches.match("/calendario", options);
 }
 
 // Primeiro a rede, mas sem deixar a pessoa à espera: se falhar ou demorar, usa a cache
@@ -141,7 +142,7 @@ self.addEventListener("push", (event) => {
     icon: "/icons/" + (isAndroid ? "android-blank-icon-192.png" : "necc-icon-192.png"),
     // O Android só usa a transparência desta imagem: tem de ser branco sobre transparente.
     badge: "/icons/necc-icon-192-monochrome.png",
-    data: { url: data.url || "/" },
+    data: { url: data.url || "/calendario" },
     tag: data.tag,
     renotify: Boolean(data.tag),
   };
@@ -152,7 +153,7 @@ self.addEventListener("push", (event) => {
 // Tocar na notificação abre a app no dia do teste.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || "/";
+  const url = event.notification.data?.url || "/calendario";
 
   event.waitUntil(
     (async () => {

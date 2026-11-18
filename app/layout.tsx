@@ -1,7 +1,6 @@
 // Estrutura base de todas as páginas: metadados da PWA e componentes globais.
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { InstallPrompt } from "@/app/components/InstallPrompt";
 import { RegisterSW } from "@/app/components/RegisterSW";
 import { Haptics } from "@/app/components/Haptics";
 
@@ -42,7 +41,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div aria-hidden="true" className="fixed top-0 inset-x-0 z-30 h-[max(12px,env(safe-area-inset-top))] bg-background" />
         <RegisterSW />
         <Haptics />
-        <InstallPrompt />
         {children}
       </body>
     </html>

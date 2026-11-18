@@ -45,7 +45,7 @@ function starPayload(event: CalendarEvent, daysLeft: number): PushPayload {
   return {
     title: `${prefix}: ${event.title}`,
     body: formatDay(day),
-    url: `/?date=${day}`,
+    url: `/calendario?date=${day}`,
     // A tag muda todos os dias: o Safari não suporta `renotify`, por isso uma tag
     // repetida podia não alertar a pessoa.
     tag: `star-${event.id}-${daysLeft}`,

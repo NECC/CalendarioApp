@@ -5,7 +5,7 @@
   "description": "Calendário de testes, entregas e eventos de LCC.",
   "lang": "pt-PT",
   "dir": "auto",
-  "start_url": "/?source=pwa",
+  "start_url": "/calendario?source=pwa",
   "scope": "/",
   "display": "standalone",
   "display_override": [

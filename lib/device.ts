@@ -6,10 +6,19 @@ export function isIOS() {
   return /iPhone|iPad|iPod/.test(ua) || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
 }
 
+/**
+ * O mesmo teste que `isInstalled`, como texto para um <script> que corre antes de a
+ * página aparecer (antes de o React arrancar).
+ */
+export const INSTALLED_CHECK =
+  "(matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: window-controls-overlay)').matches||navigator.standalone===true)";
+
 /** A app está aberta a partir do ícone, sem a barra do browser? */
 export function isInstalled() {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
+    // No computador, a app instalada pode usar a barra de título como espaço da app.
+    window.matchMedia("(display-mode: window-controls-overlay)").matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true
   );
 }
