@@ -1,6 +1,7 @@
 // Lista de testes e entregas: as datas mudam-se aqui.
 // Copiada do calendário do NECChange (https://necchange.necc.di.uminho.pt/).
 // A página e o cron dos avisos leem daqui, por isso estão sempre de acordo.
+import { SUBJECTS_DATA } from "@/lib/subjects";
 import type { CalendarEvent } from "@/types/calendar";
 
 interface RawItem {
@@ -78,14 +79,22 @@ function eventId(categoryId: string, item: RawItem): string {
   return `${categoryId}-${item.day}-${slug}`;
 }
 
+/** A UC de uma linha da lista, que pode estar escrita pela sigla ou pelo nome. */
+function findSubject(subject: string) {
+  return SUBJECTS_DATA.find((s) => s.code === subject || s.name === subject);
+}
+
 export function getCalendarEvents(): CalendarEvent[] {
   const events: CalendarEvent[] = [];
 
   for (const [categoryId, items] of Object.entries(RAW_DATA)) {
     for (const item of items) {
+      const subject = findSubject(item.subject);
       events.push({
         id: eventId(categoryId, item),
-        title: `${item.subject} - ${item.type}`,
+        // O título usa o nome completo; o ID continua com a sigla, para não perder estrelas.
+        title: `${subject?.name ?? item.subject} - ${item.type}`,
+        subject: subject?.code ?? item.subject,
         // Uma data sozinha seria lida como UTC, o que pode cair no dia local errado.
         startTimestampnz: `${item.day}T09:00:00`,
         category: categoryId,

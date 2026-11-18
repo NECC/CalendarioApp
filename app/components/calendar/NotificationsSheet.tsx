@@ -68,7 +68,7 @@ function StarredRow({
         className="min-w-0 flex-1 flex items-center gap-3 text-left"
       >
         <span className="w-2 h-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold">{event.title}</span>
+        <span className="min-w-0 flex-1 text-sm font-semibold leading-snug break-words">{event.title}</span>
         <span className="shrink-0 text-[11px] font-medium opacity-75 tabular-nums">{label}</span>
       </button>
       <button

@@ -115,7 +115,7 @@ export function DayAgenda({
                 }}
               >
                 <CategoryIcon category={event.category} />
-                <p className="min-w-0 flex-1 truncate text-sm font-semibold">{event.title}</p>
+                <p className="min-w-0 flex-1 text-sm font-semibold leading-snug break-words">{event.title}</p>
                 {!isPastDay && (
                   <StarButton
                     event={event}

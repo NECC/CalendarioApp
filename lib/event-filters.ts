@@ -26,6 +26,9 @@ export function filterEvents(events: CalendarEvent[], years: number[], codes: st
   return events.filter((event) => {
     const year = EVENT_CATEGORY_YEAR[event.category];
     if (year !== undefined && years.includes(year)) return true;
+    // Com o título já não dá: "Cálculo" também apanharia "Cálculo de Programas".
+    if (event.subject) return codes.includes(event.subject);
+    // Respostas antigas guardadas pelo service worker não têm `subject`.
     return matchers.some((matches) => matches(event.title));
   });
 }
