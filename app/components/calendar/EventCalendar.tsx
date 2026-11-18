@@ -1,6 +1,6 @@
 "use client";
 // Ecrã principal: junta o calendário, a agenda do dia e os filtros.
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DayAgenda } from "@/app/components/calendar/DayAgenda";
 import { FilterSheet } from "@/app/components/calendar/FilterSheet";
 import { MonthGrid } from "@/app/components/calendar/MonthGrid";
@@ -60,15 +60,22 @@ function getNotificationHint(push: PushControls): string | null {
   return "Os avisos estão desligados. Podes ligá-los no sino, no topo.";
 }
 
-// Este componente só é desenhado no browser: a página mostra o esqueleto até os dados
-// chegarem, por isso window e localStorage podem ser usados logo.
-export function EventCalendar({ events }: { events: CalendarEvent[] }) {
-  const [calendar, setCalendar] = useState<CalendarState>(initialCalendar);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const { month, selected } = calendar;
+/** Estrelas e avisos. Só existem na app; no computador o calendário não os tem. */
+interface StarControls {
+  starredSet: Set<string>;
+  toggleStar: (id: string) => void;
+  /** Dar uma estrela também liga os avisos. */
+  handleToggleStar: (id: string) => void;
+  push: PushControls;
+}
 
-  const filters = useEventFilters();
+const NO_STARS = new Set<string>();
+
+// Estes componentes só são desenhados no browser: a página mostra o esqueleto até os
+// dados chegarem, por isso window e localStorage podem ser usados logo.
+
+/** O calendário da app instalada, com estrelas e avisos. */
+export function EventCalendar({ events }: { events: CalendarEvent[] }) {
   const { starred, starredSet, toggleStar } = useStarred(events);
   const push = usePushNotifications(starred);
 
@@ -83,6 +90,32 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
     [starredSet, toggleStar, enableFromStar],
   );
 
+  return <CalendarView events={events} stars={{ starredSet, toggleStar, handleToggleStar, push }} />;
+}
+
+/** O calendário no computador: sem estrelas nem avisos, com links para o material. */
+export function DesktopCalendar({ events }: { events: CalendarEvent[] }) {
+  return <CalendarView events={events} stars={null} desktop />;
+}
+
+function CalendarView({
+  events,
+  stars,
+  desktop = false,
+}: {
+  events: CalendarEvent[];
+  stars: StarControls | null;
+  /** Ecrã largo: calendário e agenda lado a lado, com botões para mudar de mês. */
+  desktop?: boolean;
+}) {
+  const [calendar, setCalendar] = useState<CalendarState>(initialCalendar);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const { month, selected } = calendar;
+
+  const filters = useEventFilters();
+  const starredSet = stars?.starredSet ?? NO_STARS;
+
   // Mudar de mês ao deslizar
   const changeMonth = useCallback((delta: number) => {
     setCalendar((prev) => {
@@ -96,6 +129,19 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
     onSwipeLeft: goNext,
     onSwipeRight: goPrev,
   });
+
+  // No computador, as setas do teclado também mudam de mês.
+  useEffect(() => {
+    if (!desktop) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (document.querySelector("[role=dialog]")) return;
+      if (e.key === "ArrowLeft") goPrev();
+      else if (e.key === "ArrowRight") goNext();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [desktop, goPrev, goNext]);
 
   const selectDate = useCallback((date: Date) => {
     setCalendar((prev) => ({ ...prev, selected: date }));
@@ -138,19 +184,87 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
   }
   const agenda = hasDayEvents ? { date: selected, events: dayEvents } : lastAgenda;
 
+  const topBar = (
+    <TopBar
+      monthName={MONTHS[month.getMonth()]}
+      year={month.getFullYear()}
+      onOpenFilters={() => setIsFilterOpen(true)}
+      activeFilterCount={filters.years.length + filters.subjects.length}
+      onOpenNotifications={stars ? () => setIsNotificationsOpen(true) : undefined}
+      upcomingStarredCount={upcomingStarredCount}
+      showToday={!isCurrentMonth}
+      onGoToday={goToday}
+      onPrevMonth={desktop ? goPrev : undefined}
+      onNextMonth={desktop ? goNext : undefined}
+    />
+  );
+
+  const sheets = (
+    <>
+      {isFilterOpen && (
+        <FilterSheet
+          years={filters.years}
+          subjects={filters.subjects}
+          resultCount={filteredEvents.length}
+          onToggleYear={filters.toggleYear}
+          onToggleSubject={filters.toggleSubject}
+          onClear={filters.clearFilters}
+          onClose={closeFilters}
+        />
+      )}
+
+      {stars && isNotificationsOpen && (
+        <NotificationsSheet
+          events={events}
+          starredIds={starredSet}
+          onToggleStar={stars.toggleStar}
+          onSelectDate={goToDate}
+          onClose={closeNotifications}
+          push={stars.push}
+        />
+      )}
+    </>
+  );
+
+  if (desktop) {
+    return (
+      <div className="flex flex-col w-full h-dvh bg-background text-foreground px-6 lg:px-10 py-6 max-w-6xl mx-auto relative overflow-hidden">
+        <div className="shrink-0 mb-6">{topBar}</div>
+
+        <div className="flex-1 min-h-0 flex gap-6">
+          {/* Calendário */}
+          <div className="flex-1 min-w-0 flex flex-col bg-card rounded-3xl border border-border shadow-sm overflow-hidden select-none">
+            <MonthGrid
+              date={month}
+              events={filteredEvents}
+              selectedDate={selected}
+              onSelectDate={selectDate}
+              starredIds={starredSet}
+              large
+            />
+          </div>
+
+          {/* Agenda do dia: sempre à direita, mesmo sem eventos */}
+          <div className="w-80 xl:w-96 shrink-0 flex flex-col">
+            <DayAgenda
+              selectedDate={selected}
+              events={dayEvents}
+              starredIds={starredSet}
+              onToggleStar={stars?.handleToggleStar}
+              notificationHint={stars && getNotificationHint(stars.push)}
+            />
+          </div>
+        </div>
+
+        {sheets}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col w-full h-dvh bg-background text-foreground px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[max(1rem,env(safe-area-inset-bottom))] max-w-lg mx-auto relative overflow-hidden">
       <div className="shrink-0 mb-4">
-        <TopBar
-          monthName={MONTHS[month.getMonth()]}
-          year={month.getFullYear()}
-          onOpenFilters={() => setIsFilterOpen(true)}
-          activeFilterCount={filters.years.length + filters.subjects.length}
-          onOpenNotifications={() => setIsNotificationsOpen(true)}
-          upcomingStarredCount={upcomingStarredCount}
-          showToday={!isCurrentMonth}
-          onGoToday={goToday}
-        />
+{topBar}
       </div>
 
       {/* Calendário */}
@@ -185,34 +299,13 @@ export function EventCalendar({ events }: { events: CalendarEvent[] }) {
             selectedDate={agenda.date}
             events={agenda.events}
             starredIds={starredSet}
-            onToggleStar={handleToggleStar}
-            notificationHint={getNotificationHint(push)}
+            onToggleStar={stars?.handleToggleStar}
+            notificationHint={stars && getNotificationHint(stars.push)}
           />
         )}
       </div>
 
-      {isFilterOpen && (
-        <FilterSheet
-          years={filters.years}
-          subjects={filters.subjects}
-          resultCount={filteredEvents.length}
-          onToggleYear={filters.toggleYear}
-          onToggleSubject={filters.toggleSubject}
-          onClear={filters.clearFilters}
-          onClose={closeFilters}
-        />
-      )}
-
-      {isNotificationsOpen && (
-        <NotificationsSheet
-          events={events}
-          starredIds={starredSet}
-          onToggleStar={toggleStar}
-          onSelectDate={goToDate}
-          onClose={closeNotifications}
-          push={push}
-        />
-      )}
+      {sheets}
     </div>
   );
 }

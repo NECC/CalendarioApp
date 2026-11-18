@@ -1,5 +1,6 @@
 // Esqueleto do ecrã principal, mostrado enquanto os dados carregam.
-export function CalendarSkeleton() {
+export function CalendarSkeleton({ desktop = false }: { desktop?: boolean }) {
+  if (desktop) return <DesktopSkeleton />;
   return (
     <div
       className="flex flex-col w-full h-dvh bg-background px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[max(1rem,env(safe-area-inset-bottom))] gap-4 max-w-lg mx-auto animate-pulse overflow-hidden"
@@ -35,6 +36,26 @@ export function CalendarSkeleton() {
           <div className="h-6 w-20 rounded-full bg-muted/30" />
         </div>
         <div className="h-14 rounded-2xl bg-muted/15" />
+      </div>
+    </div>
+  );
+}
+
+/** O mesmo, com o calendário e a agenda lado a lado, como no computador. */
+function DesktopSkeleton() {
+  return (
+    <div
+      className="flex flex-col w-full h-dvh bg-background px-6 lg:px-10 py-6 gap-6 max-w-6xl mx-auto animate-pulse overflow-hidden"
+      aria-busy="true"
+      aria-label="A carregar o calendário"
+    >
+      <div className="flex items-center justify-between w-full px-1 shrink-0">
+        <div className="h-10 w-64 rounded-full bg-muted/30" />
+        <div className="h-10 w-10 rounded-full bg-muted/30" />
+      </div>
+      <div className="flex-1 min-h-0 flex gap-6">
+        <div className="flex-1 bg-card rounded-3xl border border-border" />
+        <div className="w-80 xl:w-96 shrink-0 bg-card rounded-3xl border border-border" />
       </div>
     </div>
   );

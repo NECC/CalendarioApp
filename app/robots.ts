@@ -1,5 +1,5 @@
 // robots.txt: os motores de pesquisa podem ver a página de entrada.
-// A API e o calendário (que no browser volta para "/") não interessam aos resultados.
+// A API e os calendários (o da app no browser volta para "/") não interessam aos resultados.
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 
@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/calendario"],
+      disallow: ["/api/", "/calendario", "/computador"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
     host: SITE_URL,

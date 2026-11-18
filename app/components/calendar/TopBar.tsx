@@ -7,12 +7,33 @@ interface TopBarProps {
   onOpenFilters: () => void;
   /** Número de filtros ativos, mostrado no botão. */
   activeFilterCount: number;
-  onOpenNotifications: () => void;
+  /** Sem esta função (no computador), não mostra o botão dos avisos. */
+  onOpenNotifications?: () => void;
   /** Testes com estrela que ainda vão acontecer, mostrado no botão. */
   upcomingStarredCount: number;
   /** Mostra o botão para voltar a hoje (quando o mês aberto não é o atual). */
   showToday: boolean;
   onGoToday: () => void;
+  /** Botões para o mês anterior e o seguinte. Só no computador, onde não se desliza. */
+  onPrevMonth?: () => void;
+  onNextMonth?: () => void;
+}
+
+function Chevron({ direction }: { direction: "left" | "right" }) {
+  return (
+    <svg
+      className="w-4 h-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d={direction === "left" ? "m15 18-6-6 6-6" : "m9 18 6-6-6-6"} />
+    </svg>
+  );
 }
 
 const ROUND_BUTTON =
@@ -29,6 +50,8 @@ export function TopBar({
   upcomingStarredCount,
   showToday,
   onGoToday,
+  onPrevMonth,
+  onNextMonth,
 }: TopBarProps) {
   return (
     <div className="flex items-center justify-between w-full px-1 shrink-0">
@@ -58,14 +81,27 @@ export function TopBar({
         </button>
       </div>
 
+      {onPrevMonth && (
+        <button onClick={onPrevMonth} className={`${ROUND_BUTTON} mr-2`} title="Mês anterior" aria-label="Mês anterior">
+          <Chevron direction="left" />
+        </button>
+      )}
+
       <div className="flex items-center h-10 bg-card border border-border rounded-full px-4 shadow-xs">
         <h1 className="text-foreground font-bold text-sm tracking-tight uppercase">
           {monthName} {year}
         </h1>
       </div>
+
+      {onNextMonth && (
+        <button onClick={onNextMonth} className={`${ROUND_BUTTON} ml-2`} title="Mês seguinte" aria-label="Mês seguinte">
+          <Chevron direction="right" />
+        </button>
+      )}
       </div>
 
       <div className="flex items-center gap-2">
+      {onOpenNotifications && (
       <button
         onClick={onOpenNotifications}
         className={ROUND_BUTTON}
@@ -77,6 +113,7 @@ export function TopBar({
         <BellIcon className="w-4 h-4" />
         {upcomingStarredCount > 0 && <span className={COUNT_BADGE}>{upcomingStarredCount}</span>}
       </button>
+      )}
 
       <button
         onClick={onOpenFilters}

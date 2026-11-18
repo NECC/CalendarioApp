@@ -1,14 +1,16 @@
 // Página de entrada, no browser: apresenta o projeto e ensina a instalar a app.
 // O calendário (/calendario) só abre na app instalada.
 import { InstallButton } from "@/app/components/InstallButton";
-import { INSTALLED_CHECK } from "@/lib/device";
+import { DESKTOP_CHECK, INSTALLED_CHECK } from "@/lib/device";
 
 // Corre antes de a página aparecer:
+// - no computador, vai para o calendário do computador (sem estrelas nem instalação);
 // - na app instalada (por exemplo, instalada quando a app ainda abria em "/"), vai
 //   logo para o calendário, sem mostrar esta página;
 // - guarda o pedido de instalação do browser, que pode chegar antes do React.
 const EARLY_SCRIPT = `
-if (${INSTALLED_CHECK}) location.replace("/calendario" + location.search);
+if (${DESKTOP_CHECK}) location.replace("/computador" + location.search);
+else if (${INSTALLED_CHECK}) location.replace("/calendario" + location.search);
 addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__installPrompt = e; });
 `;
 

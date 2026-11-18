@@ -13,12 +13,15 @@ interface MonthGridProps {
   onSelectDate: (date: Date) => void;
   /** IDs dos eventos com estrela (o seu dia mostra uma pequena estrela). */
   starredIds: Set<string>;
+  /** Dias maiores, para o ecrã do computador. */
+  large?: boolean;
 }
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-// Cada dia é um círculo que cresce com a altura disponível (até 2.75rem)
+// Cada dia é um círculo que cresce com a altura disponível (até 2.75rem, ou 4rem no computador)
 const DAY_BOX = "relative h-full max-h-11 aspect-square";
+const DAY_BOX_LARGE = "relative h-full max-h-16 aspect-square";
 
 export const MonthGrid = memo(function MonthGrid({
   date,
@@ -26,6 +29,7 @@ export const MonthGrid = memo(function MonthGrid({
   selectedDate,
   onSelectDate,
   starredIds,
+  large = false,
 }: MonthGridProps) {
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -67,7 +71,7 @@ export const MonthGrid = memo(function MonthGrid({
   const today = new Date();
 
   return (
-    <div className="w-full flex-1 min-h-0 flex flex-col bg-card p-4 rounded-3xl">
+    <div className={`w-full flex-1 min-h-0 flex flex-col bg-card rounded-3xl ${large ? "p-6" : "p-4"}`}>
       <div className="grid grid-cols-7 mb-2 shrink-0">
         {WEEKDAYS.map((day) => (
           <div
@@ -80,7 +84,7 @@ export const MonthGrid = memo(function MonthGrid({
       </div>
 
       <div
-        className="flex-1 min-h-0 grid grid-cols-7 gap-x-1"
+        className={`flex-1 min-h-0 grid grid-cols-7 ${large ? "gap-x-2 gap-y-1" : "gap-x-1"}`}
         style={{ gridTemplateRows: `repeat(${weeks}, minmax(0, 1fr))` }}
       >
         {cells.map(({ date: cellDate, inMonth }) => {
@@ -100,7 +104,7 @@ export const MonthGrid = memo(function MonthGrid({
               key={`day-${day}`}
               className="min-h-0 flex items-center justify-center"
             >
-              <div className={DAY_BOX}>
+              <div className={large ? DAY_BOX_LARGE : DAY_BOX}>
                 <button
                   onClick={() => onSelectDate(cellDate)}
                   aria-pressed={isSelected}
@@ -110,7 +114,7 @@ export const MonthGrid = memo(function MonthGrid({
                     month: "long",
                     year: "numeric",
                   })}
-                  className={`w-full h-full flex items-center justify-center rounded-full text-sm font-semibold transition-all active:scale-95 ${
+                  className={`w-full h-full flex items-center justify-center rounded-full ${large ? "text-base" : "text-sm"} font-semibold transition-all active:scale-95 ${
                     isSelected
                       ? "bg-foreground/15 text-foreground shadow-sm"
                       : isToday

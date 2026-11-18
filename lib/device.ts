@@ -22,3 +22,16 @@ export function isInstalled() {
     (navigator as Navigator & { standalone?: boolean }).standalone === true
   );
 }
+
+/**
+ * O mesmo teste que `isDesktop`, como texto para um <script> que corre antes de a
+ * página aparecer.
+ */
+export const DESKTOP_CHECK =
+  "(!/Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent)&&!(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1))";
+
+/** Está num computador (não num telemóvel nem num tablet)? */
+export function isDesktop() {
+  const ua = navigator.userAgent;
+  return !/Android|iPhone|iPad|iPod|Mobi/i.test(ua) && !isIOS();
+}

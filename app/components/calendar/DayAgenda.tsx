@@ -1,7 +1,9 @@
 "use client";
 // Lista dos eventos do dia selecionado, cada um com a sua estrela.
+// No computador não há estrelas: cada teste leva ao material da UC no GitHub.
 import { StarIcon } from "@/app/components/calendar/StarIcon";
 import { getCategoryColor } from "@/lib/category-colors";
+import { materialUrl } from "@/lib/site";
 import type { CalendarEvent } from "@/types/calendar";
 
 interface DayAgendaProps {
@@ -9,7 +11,8 @@ interface DayAgendaProps {
   /** Eventos do dia selecionado, já filtrados. */
   events: CalendarEvent[];
   starredIds: Set<string>;
-  onToggleStar: (id: string) => void;
+  /** Sem esta função (no computador), mostra o link para o material em vez da estrela. */
+  onToggleStar?: (id: string) => void;
   /** Mensagem mostrada quando há estrelas mas os avisos não podem chegar. */
   notificationHint: string | null;
 }
@@ -35,6 +38,32 @@ function StarButton({
     >
       <StarIcon className="w-5 h-5" filled={active} />
     </button>
+  );
+}
+
+function MaterialLink({ event }: { event: CalendarEvent }) {
+  return (
+    <a
+      href={materialUrl(event)}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Material de ${event.title} no GitHub`}
+      title="Material do curso no GitHub"
+      className="shrink-0 -mr-1 p-1 rounded-full opacity-60 hover:opacity-100 transition active:scale-75"
+    >
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      </svg>
+    </a>
   );
 }
 
@@ -116,13 +145,15 @@ export function DayAgenda({
               >
                 <CategoryIcon category={event.category} />
                 <p className="min-w-0 flex-1 text-sm font-semibold leading-snug break-words">{event.title}</p>
-                {!isPastDay && (
-                  <StarButton
-                    event={event}
-                    active={starredIds.has(event.id)}
-                    onToggle={() => onToggleStar(event.id)}
-                  />
-                )}
+                {onToggleStar
+                  ? !isPastDay && (
+                      <StarButton
+                        event={event}
+                        active={starredIds.has(event.id)}
+                        onToggle={() => onToggleStar(event.id)}
+                      />
+                    )
+                  : event.category !== "eventos" && <MaterialLink event={event} />}
               </div>
             );
           })

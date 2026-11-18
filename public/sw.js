@@ -2,7 +2,7 @@
 // Guarda as datas para funcionar sem ligação e mostra as notificações.
 
 // Mudar este nome apaga a cache antiga no evento activate.
-const CACHE = "necc-v1";
+const CACHE = "necc-v2";
 
 // Estrelas à espera de internet. Não muda com as versões da cache: não se podem perder.
 const PENDING_CACHE = "necc-pending";
@@ -61,8 +61,12 @@ self.addEventListener("message", (event) => {
 
 async function fromCache(req) {
   // ignoreVary: as respostas do Next variam com cabeçalhos que aqui não interessam.
-  const options = { ignoreVary: true, ignoreSearch: req.mode === "navigate" };
-  const cached = await caches.match(req, options);
+  // Numa página, procura só pelo caminho (sem "?..."). Com ignoreSearch, "/" podia
+  // devolver um pedido interno do Next ("/?_rsc=...") e a página aparecia como texto.
+  const options = { ignoreVary: true };
+  const url = new URL(req.url);
+  const key = req.mode === "navigate" ? url.origin + url.pathname : req;
+  const cached = await caches.match(key, options);
   if (cached || req.mode !== "navigate") return cached;
   // Uma página que não está guardada: abre o calendário (no browser, ele manda para "/").
   return caches.match("/calendario", options);
@@ -98,6 +102,8 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET" || url.origin !== self.location.origin) return;
   // A versão tem de vir sempre do servidor, nunca da cache.
   if (url.pathname === "/api/version") return;
+  // Pedidos internos de navegação do Next (RSC): não são páginas, não se guardam.
+  if (url.searchParams.has("_rsc") || req.headers.get("RSC") === "1") return;
   event.respondWith(networkFirst(event, req));
 });
 
