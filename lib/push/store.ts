@@ -5,7 +5,7 @@ import "server-only";
 import { Redis } from "@upstash/redis";
 import type { PushSubscription } from "web-push";
 
-export interface StoredSubscription {
+interface StoredSubscription {
   /** Endereço do dispositivo, gerado pelo browser. */
   subscription: PushSubscription;
   /** IDs dos testes com estrela. */
@@ -13,7 +13,7 @@ export interface StoredSubscription {
 }
 
 /** Resultado de uma execução do cron, mostrado em /api/push/health. */
-export interface CronRun {
+interface CronRun {
   at: string;
   path: string;
   [detail: string]: unknown;

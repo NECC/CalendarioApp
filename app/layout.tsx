@@ -75,6 +75,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <RegisterSW />
         <Haptics />
         {children}
+        {/* A app só funciona na vertical. No Android instalado o manifest já a prende,
+            mas o iPhone e o browser ignoram isso: aí tapa-se o ecrã com um aviso. */}
+        <div className="rotate-notice" role="alert">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="7" y="2" width="10" height="20" rx="2" />
+            <path d="M11 18h2" />
+          </svg>
+          <p>Roda o telemóvel para a vertical.</p>
+        </div>
       </body>
     </html>
   );

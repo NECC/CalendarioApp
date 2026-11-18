@@ -57,6 +57,7 @@ const RAW_DATA: Record<string, RawItem[]> = {
     { subject: "CC", day: "2026-12-17", type: "Teste" },
     { subject: "LC", day: "2027-01-04", type: "Apresentação" },
     { subject: "PLC", day: "2027-01-06", type: "Teste" },
+    { subject: "TNC", day: "2027-01-08", type: "Teste" }
   ],
   eventos: [
     { subject: "LIP", day: "2026-09-16", type: "Instalar Linux" },

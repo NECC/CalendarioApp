@@ -8,11 +8,11 @@ import { sendPush, type PushPayload } from "@/lib/push/send";
 import type { CalendarEvent } from "@/types/calendar";
 
 const TIME_ZONE = "Europe/Lisbon";
-export const DAYS_BEFORE = 7;
+const DAYS_BEFORE = 7;
 export const SEND_HOUR = 10;
 
 /** Data "YYYY-MM-DD" em Lisboa, daqui a `offsetDays` dias. */
-export function lisbonDate(offsetDays = 0, now = new Date()): string {
+function lisbonDate(offsetDays = 0, now = new Date()): string {
   const d = new Date(now.getTime() + offsetDays * 24 * 60 * 60 * 1000);
   return new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE }).format(d);
 }
@@ -53,7 +53,7 @@ function starPayload(event: CalendarEvent, daysLeft: number): PushPayload {
 }
 
 /** Avisos que uma pessoa recebe hoje. */
-export function buildJobs(
+function buildJobs(
   allEvents: CalendarEvent[],
   starred: string[] = [],
   now = new Date(),

@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getVapidPublicKey, subscribeUser, unsubscribeUser, updateStarred } from "@/app/actions";
 import { isInstalled, isIOS } from "@/lib/device";
 
-export type PushStatus =
+type PushStatus =
   | "loading" // ainda a verificar
   | "unsupported" // o browser não suporta avisos
   | "ios-not-installed" // no iPhone, a app tem de estar instalada

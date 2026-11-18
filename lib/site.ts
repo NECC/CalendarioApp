@@ -13,7 +13,7 @@ export const SITE_DESCRIPTION =
   "Calendário de testes, entregas e apresentações de Ciências da Computação (LCC) da Universidade do Minho, feito pelo NECC. Filtra pelas tuas UCs e recebe avisos antes dos testes.";
 
 /** Repositório do NECC com o material das UCs, aberto a partir do calendário no computador. */
-export const MATERIAL_URL = "https://github.com/NECC/Material-Do-Curso";
+const MATERIAL_URL = "https://github.com/NECC/Material-Do-Curso";
 
 // Pasta de cada UC no repositório (pela sigla, o `code` em lib/subjects.ts). Os nomes
 // têm de ser iguais aos do GitHub, mesmo quando diferem do nome oficial da UC.

@@ -33,7 +33,7 @@ export interface PushPayload {
   tag?: string;
 }
 
-export interface PushResult {
+interface PushResult {
   outcome: "ok" | "gone" | "error";
   /** Código HTTP devolvido pelo serviço de push, quando existe. */
   status?: number;
