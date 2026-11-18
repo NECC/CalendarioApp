@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       process.env.VERCEL_DEPLOYMENT_ID ?? process.env.VERCEL_GIT_COMMIT_SHA ?? String(Date.now()),
   },
   experimental: {
+    agentUpgrade: "security",
     agentFeedback: true,
   },
   cacheComponents: true,
