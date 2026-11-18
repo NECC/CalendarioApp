@@ -3,12 +3,45 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { RegisterSW } from "@/app/components/RegisterSW";
 import { Haptics } from "@/app/components/Haptics";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "NECC Calendário",
-  description: "Calendário de testes, entregas e eventos de LCC.",
+  metadataBase: new URL(SITE_URL),
+  title: "NECC Calendário · Testes e entregas de LCC (UMinho)",
+  description: SITE_DESCRIPTION,
+  keywords: [
+    "NECC",
+    "calendário",
+    "testes",
+    "entregas",
+    "LCC",
+    "Ciências da Computação",
+    "Universidade do Minho",
+    "UMinho",
+  ],
+  alternates: { canonical: "/" },
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: "website",
+    locale: "pt_PT",
+    url: "/",
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [{ url: "/icons/necc-icon-512.png", width: 512, height: 512, alt: SITE_NAME }],
+  },
+  twitter: {
+    card: "summary",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: ["/icons/necc-icon-512.png"],
+  },
+  // Código do Google Search Console (opcional), para confirmar que o site é nosso.
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION && {
+    verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION },
+  }),
   manifest: "/manifest.json",
-  applicationName: "NECC Calendário",
+  applicationName: SITE_NAME,
   // Nome e ícone quando a app está instalada no iPhone.
   appleWebApp: {
     capable: true,
