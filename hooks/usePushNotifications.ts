@@ -9,7 +9,7 @@
 // Sem internet nada disto se nota: as estrelas ficam em fila e são enviadas quando a
 // ligação voltar, pela app ou (no Android) pelo service worker, mesmo com a app fechada.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getVapidPublicKey, subscribeUser, unsubscribeUser, updateStarred } from "@/app/actions";
+import { subscribeUser, unsubscribeUser, updateStarred } from "@/app/actions";
 import { isInstalled, isIOS } from "@/lib/device";
 
 type PushStatus =
@@ -26,6 +26,9 @@ const SERVICE_WORKER_TIMEOUT_MS = 8000;
 // Os mesmos nomes que em public/sw.js.
 const PENDING_CACHE = "necc-pending";
 const PENDING_STARS_URL = "/__pending-stars";
+// Chave pública do servidor de push. Vem já dentro do código da app (é pública),
+// por isso ligar os avisos não precisa de ir ao servidor buscá-la.
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null;
 
 // ---- Preferência "desliguei os avisos": as estrelas deixam de os ligar ----
 
@@ -134,6 +137,8 @@ export function usePushNotifications(starred: string[]) {
   const [status, setStatus] = useState<PushStatus>("loading");
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   const [busy, setBusy] = useState(false);
+  // O interruptor muda logo ao toque; o registo acaba por trás.
+  const [turningOn, setTurningOn] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
 
@@ -141,7 +146,6 @@ export function usePushNotifications(starred: string[]) {
   const activating = useRef(false); // impede duas ativações ao mesmo tempo
   const activationStarted = useRef(false); // a verificação inicial não pode substituir o resultado
   const permissionAsked = useRef(false); // a permissão só é pedida uma vez por sessão
-  const vapidKey = useRef<string | null>(null); // obtida logo ao abrir, ver activate()
 
   useEffect(() => {
     starredRef.current = starred;
@@ -163,11 +167,13 @@ export function usePushNotifications(starred: string[]) {
         try {
           const reg = await serviceWorkerReady();
           sub = await reg.pushManager.getSubscription();
-          // Sem internet a chave não chega, mas a subscrição já é conhecida.
-          const key = await getVapidPublicKey().catch(() => null);
-          vapidKey.current = key;
-          if (sub && key && Notification.permission === "granted") {
-            sub = await getOrCreateSubscription(reg, keyToBytes(key));
+          if (sub && isOptedOut()) {
+            // A pessoa desligou os avisos mas o browser não chegou a apagar a subscrição.
+            await sub.unsubscribe().catch(() => {});
+            unsubscribeUser(sub.endpoint).catch(() => {});
+            sub = null;
+          } else if (sub && VAPID_PUBLIC_KEY && Notification.permission === "granted") {
+            sub = await getOrCreateSubscription(reg, keyToBytes(VAPID_PUBLIC_KEY));
           }
         } catch (err) {
           console.error("[push] falha ao verificar os avisos:", err);
@@ -246,17 +252,25 @@ export function usePushNotifications(starred: string[]) {
         return;
       }
 
-      // O Safari exige que a subscrição venha de um toque. Uma ida ao servidor
-      // aqui podia fazer perder esse toque, por isso a chave já vem da abertura.
-      const key = vapidKey.current ?? (await getVapidPublicKey());
-      if (!key) throw new Error("NO_VAPID_KEY");
+      if (!VAPID_PUBLIC_KEY) throw new Error("NO_VAPID_KEY");
+      const sub = await getOrCreateSubscription(await serviceWorkerReady(), keyToBytes(VAPID_PUBLIC_KEY));
 
-      const sub = await getOrCreateSubscription(await serviceWorkerReady(), keyToBytes(key));
-      const result = await subscribeUser(sub.toJSON(), starredRef.current);
-      if (!result.success) throw new Error(`SERVER:${result.error}`);
-
+      // O dispositivo já pode receber avisos: o interruptor fica ligado e o servidor
+      // fica a saber por trás. Sem internet, o envio das estrelas regista-o mais tarde.
       setSubscription(sub);
       setStatus("on");
+      setBusy(false);
+      try {
+        const result = await subscribeUser(sub.toJSON(), starredRef.current);
+        if (!result.success) {
+          await sub.unsubscribe().catch(() => {});
+          setSubscription(null);
+          setStatus("off");
+          throw new Error(`SERVER:${result.error}`);
+        }
+      } catch (err) {
+        if (!isConnectionError(err)) throw err;
+      }
     } catch (err) {
       if (isConnectionError(err)) permissionAsked.current = false;
       else {
@@ -271,9 +285,14 @@ export function usePushNotifications(starred: string[]) {
   }, []);
 
   /** Interruptor do painel dos avisos: ligar. */
-  const enable = useCallback(() => {
+  const enable = useCallback(async () => {
     setOptedOut(false);
-    return activate();
+    setTurningOn(true);
+    try {
+      await activate();
+    } finally {
+      setTurningOn(false);
+    }
   }, [activate]);
 
   /** Dar uma estrela liga os avisos, a não ser que a pessoa os tenha desligado. */
@@ -304,23 +323,25 @@ export function usePushNotifications(starred: string[]) {
   }, [status, hasStars, activate]);
 
   /** Interruptor do painel dos avisos: desligar. */
-  const disable = useCallback(async () => {
+  // Desliga logo e apaga a subscrição por trás. Se o browser não a conseguir apagar,
+  // fica marcado que a pessoa desligou e a próxima abertura da app trata disso.
+  // Sem internet o servidor fica a saber no próximo envio, quando o dispositivo já não existir.
+  const disable = useCallback(() => {
     if (!subscription) return;
-    setBusy(true);
     setOptedOut(true);
-    try {
-      await subscription.unsubscribe();
-      // Sem internet o servidor fica a saber no próximo envio, quando o dispositivo já não existir.
-      await unsubscribeUser(subscription.endpoint).catch(() => {});
-      setSubscription(null);
-      setStatus("off");
-      setMessage(null);
-    } finally {
-      setBusy(false);
-    }
+    setTurningOn(false);
+    setSubscription(null);
+    setStatus("off");
+    setMessage(null);
+    setSyncError(null);
+    subscription.unsubscribe().catch((err) => console.warn("[push] falha ao apagar a subscrição:", err));
+    unsubscribeUser(subscription.endpoint).catch(() => {});
   }, [subscription]);
 
-  return { status, busy, message, syncError, enable, enableFromStar, disable };
+  /** Posição do interruptor: muda logo ao toque, antes de o registo acabar. */
+  const checked = status === "on" || turningOn;
+
+  return { status, checked, busy, message, syncError, enable, enableFromStar, disable };
 }
 
 export type PushControls = ReturnType<typeof usePushNotifications>;

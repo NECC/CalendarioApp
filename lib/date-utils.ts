@@ -1,3 +1,8 @@
+/** Meia-noite do mesmo dia. */
+export function startOfDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
 export function isSameDay(a: Date, b: Date): boolean {
   return (
     a.getFullYear() === b.getFullYear() &&
@@ -15,6 +20,6 @@ export function dayKey(d: Date): string {
 export function defaultSelectedDate(month: Date, today = new Date()): Date {
   return month.getFullYear() === today.getFullYear() &&
     month.getMonth() === today.getMonth()
-    ? new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    ? startOfDay(today)
     : new Date(month.getFullYear(), month.getMonth(), 1);
 }

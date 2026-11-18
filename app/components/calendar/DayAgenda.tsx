@@ -1,8 +1,9 @@
 "use client";
 // Lista dos eventos do dia selecionado, cada um com a sua estrela.
 // No computador não há estrelas: cada teste leva ao material da UC no GitHub.
-import { StarIcon } from "@/app/components/calendar/StarIcon";
-import { getCategoryColor } from "@/lib/category-colors";
+import { StarIcon } from "@/app/components/icons";
+import { eventRowStyle, getCategoryColor } from "@/lib/category-colors";
+import { startOfDay } from "@/lib/date-utils";
 import { materialUrl } from "@/lib/site";
 import type { CalendarEvent } from "@/types/calendar";
 
@@ -97,8 +98,7 @@ export function DayAgenda({
   const showHint = Boolean(notificationHint) && events.some((e) => starredIds.has(e.id));
 
   // Dias antes de hoje não têm estrela: já não há avisos para receber.
-  const now = new Date();
-  const isPastDay = selectedDate < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const isPastDay = selectedDate < startOfDay(new Date());
 
   // "7 Novembro 2026"
   const headerText = selectedDate
@@ -110,7 +110,7 @@ export function DayAgenda({
     .replace(/ de /g, " ");
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col w-full bg-card rounded-3xl border border-border pt-4 px-4 pb-3 shadow-sm">
+    <div className="flex-1 min-h-0 flex flex-col w-full rounded-3xl border border-border pt-4 px-4 pb-3 shadow-sm">
       <div className="flex items-center shrink-0 px-1 mb-2">
         <span className="text-lg font-bold text-gray-600 tracking-tight capitalize">
           {headerText}
@@ -118,14 +118,14 @@ export function DayAgenda({
       </div>
 
       {showHint && (
-        <p className="shrink-0 px-1 mb-2 text-xs text-muted-foreground">
+        <p className="shrink-0 px-1 mb-2 text-xs">
           {notificationHint}
         </p>
       )}
 
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col gap-2 pb-2">
         {events.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">
+          <p className="text-sm py-4 text-center">
             Sem eventos para este dia.
           </p>
         ) : (
@@ -138,10 +138,7 @@ export function DayAgenda({
                 title={event.title}
                 // A altura mínima mantém as linhas iguais com e sem estrela.
                 className="shrink-0 flex items-center gap-3 px-3.5 py-3 min-h-13 rounded-2xl"
-                style={{
-                  backgroundColor: `color-mix(in srgb, ${color} 16%, transparent)`,
-                  color: `color-mix(in srgb, ${color} 70%, var(--foreground))`,
-                }}
+                style={eventRowStyle(color)}
               >
                 <CategoryIcon category={event.category} />
                 <p className="min-w-0 flex-1 text-sm font-semibold leading-snug break-words">{event.title}</p>

@@ -92,7 +92,7 @@ export function BottomSheet({ title, onClose, headerActions, children }: BottomS
               ref={closeRef}
               onClick={requestClose}
               aria-label={`Fechar ${title.toLowerCase()}`}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-muted/20 text-foreground hover:bg-muted/40 transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-full text-foreground"
             >
               <svg
                 className="w-4 h-4"

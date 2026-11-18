@@ -4,6 +4,7 @@
 // As estrelas dos testes que já passaram saem sozinhas: ao abrir a app e sempre que
 // volta ao ecrã (no iPhone a app pode ficar dias aberta sem recarregar).
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { startOfDay } from "@/lib/date-utils";
 import type { CalendarEvent } from "@/types/calendar";
 
 const STARRED_KEY = "necc-starred";
@@ -19,8 +20,7 @@ function load(): string[] {
 
 /** IDs dos testes de antes de hoje. Os de hoje ficam, porque ainda recebem o aviso. */
 function pastEventIds(events: CalendarEvent[]): Set<string> {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const today = startOfDay(new Date());
   return new Set(events.filter((e) => new Date(e.startTimestampnz) < today).map((e) => e.id));
 }
 

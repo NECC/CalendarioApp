@@ -71,8 +71,3 @@ export async function unsubscribeUser(endpoint: string) {
   if (typeof endpoint === "string") await deleteSubscription(endpoint);
   return { success: true as const };
 }
-
-/** Chave pública de que o browser precisa para se registar no serviço de push. */
-export async function getVapidPublicKey() {
-  return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null;
-}

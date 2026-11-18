@@ -75,20 +75,45 @@ curl -H "Authorization: Bearer $CRON_SECRET" "https://URL-DA-APP/api/cron/notify
 
 ## Onde está o quê
 
+### Páginas e rotas (`app/`)
+
+| Ficheiro | O que faz |
+|---|---|
+| `app/page.tsx` | Página de entrada no browser: apresenta a app e ensina a instalar |
+| `app/calendario/page.tsx` | Calendário da app instalada, com estrelas e avisos |
+| `app/computador/page.tsx` | Calendário no computador, com links para o material |
+| `app/layout.tsx` | Metadados, ícones e componentes globais |
+| `app/actions.ts` | Subscrever e desubscrever os avisos, e guardar as estrelas |
+| `app/api/calendar/route.ts` | Lista de testes para a app |
+| `app/api/cron/notify/[[...slot]]/route.ts` | Endpoint chamado pelos crons |
+| `app/api/push/starred/route.ts` | Estrelas enviadas pelo service worker |
+| `app/api/push/health/route.ts` | Diagnóstico |
+| `app/api/version/route.ts` | Versão do deploy, para a app saber que há uma nova |
+
+### Componentes (`app/components/`)
+
+| Ficheiro | O que faz |
+|---|---|
+| `calendar/EventCalendar.tsx` | Ecrã principal: junta tudo o que está em `calendar/` |
+| `calendar/TopBar.tsx`, `MonthGrid.tsx`, `DayAgenda.tsx` | Barra de topo, grelha do mês e agenda do dia |
+| `calendar/FilterSheet.tsx`, `NotificationsSheet.tsx` | Painéis dos filtros e dos avisos, sobre o `BottomSheet.tsx` |
+| `icons.tsx` | Ícones partilhados (estrela e sino) |
+| `InstallButton.tsx`, `RegisterSW.tsx`, `Haptics.tsx` | Instalação, service worker e vibração ao tocar |
+
+### Lógica
+
 | Ficheiro | O que faz |
 |---|---|
 | `lib/calendar-data.ts` | Lista de testes; editar aqui para mudar datas |
 | `lib/subjects.ts` | Lista de UCs |
-| `public/sw.js` | Service worker: cache e notificações |
-| `app/actions.ts` | Subscrever e desubscrever |
+| `lib/site.ts` | Endereço do site e links para o material de cada UC |
+| `lib/event-filters.ts`, `lib/date-utils.ts`, `lib/category-colors.ts`, `lib/device.ts` | Filtros, datas, cores e deteção do dispositivo |
 | `lib/push/store.ts` | Dispositivos registados, entregas do dia e últimas execuções do cron |
 | `lib/push/notify.ts` | Decide que avisos enviar |
 | `lib/push/send.ts` | Envia uma notificação |
-| `app/api/cron/notify/[[...slot]]/route.ts` | Endpoint chamado pelos crons |
-| `app/api/push/health/route.ts` | Diagnóstico |
 | `hooks/usePushNotifications.ts` | Lógica de push no browser |
-| `hooks/useStarred.ts` | Testes com estrela |
-| `hooks/useEventFilters.ts` | Filtros do calendário |
+| `hooks/useStarred.ts`, `useEventFilters.ts`, `useCalendarEvents.ts`, `useSwipe.ts` | Estrelas, filtros, carregar os testes e deslizar entre meses |
+| `public/sw.js` | Service worker: cache e notificações |
 
 ## iPhone
 

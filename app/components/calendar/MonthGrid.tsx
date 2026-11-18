@@ -1,7 +1,7 @@
 "use client";
 // Grelha do mês: um círculo por dia, com pontos coloridos nos dias com eventos.
 import { memo, useMemo } from "react";
-import { StarIcon } from "@/app/components/calendar/StarIcon";
+import { StarIcon } from "@/app/components/icons";
 import { getCategoryColor } from "@/lib/category-colors";
 import { dayKey, isSameDay } from "@/lib/date-utils";
 import type { CalendarEvent } from "@/types/calendar";
@@ -71,12 +71,12 @@ export const MonthGrid = memo(function MonthGrid({
   const today = new Date();
 
   return (
-    <div className={`w-full flex-1 min-h-0 flex flex-col bg-card rounded-3xl ${large ? "p-6" : "p-4"}`}>
+    <div className={`w-full flex-1 min-h-0 flex flex-col rounded-3xl ${large ? "p-6" : "p-4"}`}>
       <div className="grid grid-cols-7 mb-2 shrink-0">
         {WEEKDAYS.map((day) => (
           <div
             key={day}
-            className="text-center text-[11px] font-bold text-muted-foreground uppercase tracking-wider"
+            className="text-center text-[11px] font-bold uppercase tracking-wider"
           >
             {day}
           </div>
@@ -119,7 +119,7 @@ export const MonthGrid = memo(function MonthGrid({
                       ? "bg-foreground/15 text-foreground shadow-sm"
                       : isToday
                         ? "bg-accent/15 text-accent border border-accent/30"
-                        : "text-foreground hover:bg-muted/20"
+                        : "text-foreground"
                   }`}
                 >
                   {day}

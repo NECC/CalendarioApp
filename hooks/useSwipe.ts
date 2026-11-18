@@ -7,12 +7,11 @@ interface UseSwipeOptions {
   onSwipeLeft: () => void;
   /** Chamado ao deslizar para a direita (por exemplo, mês anterior). */
   onSwipeRight: () => void;
-  /** Distância mínima (px) para confirmar o gesto. */
-  threshold?: number;
 }
 
 type Axis = "x" | "y" | null;
 
+const SWIPE_DISTANCE = 60; // px mínimos para confirmar o gesto
 const LOCK_DISTANCE = 8; // px de movimento antes de decidir se é horizontal ou vertical
 const OUT_MS = 150;
 const IN_MS = 220;
@@ -35,7 +34,6 @@ const IN_MS = 220;
 export function useSwipe<T extends HTMLElement = HTMLDivElement>({
   onSwipeLeft,
   onSwipeRight,
-  threshold = 60,
 }: UseSwipeOptions) {
   const ref = useRef<T>(null);
   const callbacks = useRef({ onSwipeLeft, onSwipeRight });
@@ -113,7 +111,7 @@ export function useSwipe<T extends HTMLElement = HTMLDivElement>({
 
       if (g.axis !== "x") return; // foi um toque ou um scroll vertical
 
-      if (cancelled || Math.abs(g.dx) < threshold) {
+      if (cancelled || Math.abs(g.dx) < SWIPE_DISTANCE) {
         snapBack(el);
         return;
       }
@@ -161,7 +159,7 @@ export function useSwipe<T extends HTMLElement = HTMLDivElement>({
       }, OUT_MS);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [threshold],
+    [],
   );
 
   const onTouchEnd = useCallback(() => finish(false), [finish]);

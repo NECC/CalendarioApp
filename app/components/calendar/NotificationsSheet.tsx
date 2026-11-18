@@ -3,9 +3,10 @@
 import { useMemo } from "react";
 import { BottomSheet, useCloseSheet } from "@/app/components/calendar/BottomSheet";
 import { NotificationSettings } from "@/app/components/calendar/NotificationSettings";
-import { StarIcon } from "@/app/components/calendar/StarIcon";
+import { StarIcon } from "@/app/components/icons";
 import type { PushControls } from "@/hooks/usePushNotifications";
-import { getCategoryColor } from "@/lib/category-colors";
+import { eventRowStyle, getCategoryColor } from "@/lib/category-colors";
+import { startOfDay } from "@/lib/date-utils";
 import type { CalendarEvent } from "@/types/calendar";
 
 interface NotificationsSheetProps {
@@ -20,10 +21,6 @@ interface NotificationsSheetProps {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-function startOfDay(d: Date) {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
 
 /** "Hoje", "Amanhã", ou "qui, 12 nov". */
 function formatDate(date: Date, today: Date): string {
@@ -54,10 +51,7 @@ function StarredRow({
   return (
     <div
       className="shrink-0 flex items-center gap-3 pl-3.5 pr-2.5 py-3 rounded-2xl"
-      style={{
-        backgroundColor: `color-mix(in srgb, ${color} 16%, transparent)`,
-        color: `color-mix(in srgb, ${color} 70%, var(--foreground))`,
-      }}
+      style={eventRowStyle(color)}
     >
       <button
         onClick={() => {
@@ -105,10 +99,10 @@ export function NotificationsSheet({
     <BottomSheet title="Avisos" onClose={onClose}>
       <NotificationSettings push={push} />
 
-      <h4 className="px-1 mb-2 text-sm font-semibold text-muted-foreground">Testes com estrela</h4>
+      <h4 className="px-1 mb-2 text-sm font-semibold">Testes com estrela</h4>
 
       {upcoming.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
+        <div className="flex flex-col items-center gap-2 py-8 text-center">
           <StarIcon className="w-6 h-6 opacity-60" />
           <p className="text-sm max-w-[16rem]">
             Ainda não tens testes com estrela. Toca na estrela de um teste para receberes avisos.

@@ -10,7 +10,7 @@ import { useEventFilters } from "@/hooks/useEventFilters";
 import { usePushNotifications, type PushControls } from "@/hooks/usePushNotifications";
 import { useStarred } from "@/hooks/useStarred";
 import { useSwipe } from "@/hooks/useSwipe";
-import { defaultSelectedDate, isSameDay } from "@/lib/date-utils";
+import { defaultSelectedDate, isSameDay, startOfDay } from "@/lib/date-utils";
 import { filterEvents } from "@/lib/event-filters";
 import type { CalendarEvent } from "@/types/calendar";
 
@@ -36,12 +36,11 @@ interface CalendarState {
 
 /** Abre em hoje, ou no dia indicado por uma notificação ("/calendario?date=YYYY-MM-DD"). */
 function initialCalendar(): CalendarState {
-  const now = new Date();
   const param = new URLSearchParams(window.location.search).get("date");
   const match = param?.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   const day = match
     ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
-    : new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    : startOfDay(new Date());
   return { month: new Date(day.getFullYear(), day.getMonth(), 1), selected: day };
 }
 
@@ -151,7 +150,7 @@ function CalendarView({
 
   /** Vindo da lista dos avisos: abre o mês desse dia e seleciona-o. */
   const goToDate = useCallback((date: Date) => {
-    const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const day = startOfDay(date);
     setCalendar({ month: new Date(day.getFullYear(), day.getMonth(), 1), selected: day });
   }, []);
 
@@ -160,8 +159,7 @@ function CalendarView({
   const isCurrentMonth = month.getFullYear() === now.getFullYear() && month.getMonth() === now.getMonth();
 
   const upcomingStarredCount = useMemo(() => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const today = startOfDay(new Date());
     return events.filter((e) => starredSet.has(e.id) && new Date(e.startTimestampnz) >= today).length;
   }, [events, starredSet]);
 
@@ -233,7 +231,7 @@ function CalendarView({
 
         <div className="flex-1 min-h-0 flex gap-6">
           {/* Calendário */}
-          <div className="flex-1 min-w-0 flex flex-col bg-card rounded-3xl border border-border shadow-sm overflow-hidden select-none">
+          <div className="flex-1 min-w-0 flex flex-col rounded-3xl border border-border shadow-sm overflow-hidden select-none">
             <MonthGrid
               date={month}
               events={filteredEvents}
@@ -263,14 +261,12 @@ function CalendarView({
 
   return (
     <div className="flex flex-col w-full h-dvh bg-background text-foreground px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-[max(1rem,env(safe-area-inset-bottom))] max-w-lg mx-auto relative overflow-hidden">
-      <div className="shrink-0 mb-4">
-{topBar}
-      </div>
+      <div className="shrink-0 mb-4">{topBar}</div>
 
       {/* Calendário */}
       <div
         style={{ flexGrow: 3 }}
-        className="basis-0 min-h-0 flex flex-col bg-card rounded-3xl border border-border shadow-sm overflow-hidden select-none touch-pan-y"
+        className="basis-0 min-h-0 flex flex-col rounded-3xl border border-border shadow-sm overflow-hidden select-none touch-pan-y"
         {...swipeHandlers}
       >
         <div ref={swipeRef} className="flex-1 min-h-0 flex flex-col will-change-transform">
